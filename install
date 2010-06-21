@@ -1,6 +1,6 @@
 #!/bin/sh
-pushd /usr/src/icu/source/build2/lib
+pushd icu
 for i in libicudata.42.1.dylib libicuio.42.1.dylib; do install_name_tool -change ../lib/libicudata.42.1.dylib libicudata.42.1.dylib $i; done
 popd
-rsync -avz food/food food/food.sb utils/lib{c,}utils.dylib /usr/src/icu/source/build2/lib/*.dylib  libflashplayer.so libgcc/libgccstuff.dylib demo/*.swf oem.cfg ipad:
+rsync -avz food/food food/food.sb utils/lib{c,}utils.dylib icu/*.dylib  libflashplayer.so libgcc/libgccstuff.dylib demo/*.swf oem.cfg ipad:
 
