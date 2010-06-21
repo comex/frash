@@ -1,0 +1,18 @@
+loadLibrary("flashplayer")
+
+<init>(v8, v9, v10)
+v8 = npp
+v9 ignored
+v10 ignored
+
+setFormat(1) # RGBA_8888
+nppLock
+validNPP?
+nativeIsARGBSurface
+setType(1) # SURFACE_TYPE_HARDWARE
+setFormat(4) # RGB_565
+
+i = npp
+nativeIsARGBSurface(i)
+
+

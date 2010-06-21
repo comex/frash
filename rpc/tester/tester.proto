@@ -1,0 +1,7 @@
+#> async use_surface(int name);
+#> async display_sync();
+#> sync get_src(out buf src);
+#> async new_connection(int stream, buf url, buf target);
+#> sync get_window_object(out buf obj);
+> sync tester(int in_int, buf in_buf, out int out_int, out buf out_buf);
+#< sync tester2(int in_int, buf in_buf, out int out_int, out buf out_buf);

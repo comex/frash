@@ -1,0 +1,17 @@
+> async use_surface(int name);
+> async display_sync();
+> sync get_parameters(out buf params, out int params_count);
+> async new_connection(stream_t stream, buf url, buf target);
+> sync get_window_object(out int obj);
+> sync evaluate_web_script(buf script, out int obj);
+> sync get_object_property(int obj, buf property, out int obj2);
+> sync get_string_value(int obj, out bool valid, out buf value);
+
+# Drawing
+< async set_movie_size(int w, int h);
+# Input
+< async touch(int action, int w, int h);
+# User agent
+< async connection_response(stream_t stream, buf headers, int64_t expected_content_length);
+< async connection_got_data(stream_t stream, buf data);
+< async connection_all_done(stream_t stream, bool completed);

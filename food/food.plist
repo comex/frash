@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>food</string>
+    <key>ProgramArguments</key>
+    <array>
+	    <string>/var/root/food</string>
+        <!--<string>-q</string>-->
+    </array>
+    <key>OnDemand</key>
+    <true/>
+    <key>MachServices</key>
+    <dict>
+	    <key>Food</key>
+	    <true/>
+    </dict>
+</dict>
+</plist>

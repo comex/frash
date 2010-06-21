@@ -1,0 +1,36 @@
+(version 1)
+
+(deny default)
+(debug deny)
+
+(allow mach-lookup
+    (global-name "com.apple.mediaserverd")
+    (global-name "com.apple.audio.AudioQueueServer")
+    (global-name "com.apple.system.logger")
+    )
+
+(allow ipc-posix-shm)
+
+(allow file-read*
+    (regex #"/usr/lib(/|$)")
+    (regex #"/usr/share(/|$)")
+    (regex #"/System/Library/(Frameworks|Fonts)")
+    (regex #"/Library/Managed Preferences/mobile(/|$)")
+    (regex #"/private/var/Managed Preferences/mobile(/|$)")
+    (regex #"/private/var/mobile/Library/Preferences/\.GlobalPreferences\.plist")
+    (regex #"/var$")
+    (regex #"/var/stash.*icu[^/]*\.dat$")
+    (regex #"/private/var/db/timezone(/|$)")
+    (regex #"/private/var/stash/share\.[a-zA-Z0-9]*/zoneinfo(/|$)")
+    )
+
+(allow sysctl-read)
+
+(allow file*
+    (regex #"/private/var/tmp(/|$)")
+    (regex #"/private/tmp(/|$)")
+    (regex #"/tmp(/|$)")
+    )
+
+(allow network*)
+

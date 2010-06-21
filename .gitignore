@@ -1,0 +1,12 @@
+binutils*
+*unpacked
+*.swf
+libflashplayer.*
+food/CoreText
+food/IOSurface
+Player2/IOSurface
+*.apk
+.*.swp
+*.o
+food_rpc*.*
+*.dylib

@@ -1,0 +1,12 @@
+NP_Initialize(a, b, c)
+a.size >= 0xd4
+b is filled in with a bunch of stuff starting with two halves - so pluginfuncs
+c is some bullshit object [[it],0x36c](&object2)
+object2 gets a lot of stuff called
+0x10004
+1
+0x10004 // JNI_VERSION_1_4
+
+that gets me a JNIEnv, which is called
+0x58 - NewGlobalRef
+0x54 - DeleteGlobalRef
