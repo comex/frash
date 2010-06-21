@@ -318,7 +318,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>PluginFlashView.m</string>
+								<string>FlashViewController.m</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -326,11 +326,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>PluginFlashView.m</string>
+										<string>FlashViewController.m</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>8079FD5911CFE48800897D0C</string>
+										<string>8079FD7E11CFE94000897D0C</string>
 										<key>history</key>
 										<array>
 											<string>809F399611C56AF000BEA734</string>
@@ -340,14 +340,15 @@
 											<string>80C6A43111CD357D0062158B</string>
 											<string>80B703CD11CFCF800039423C</string>
 											<string>808456D311CFD34100E50E8C</string>
-											<string>8061CC1611CFD3AB007A83A5</string>
 											<string>8061CC1811CFD3AB007A83A5</string>
 											<string>8061CC5E11CFD3C8007A83A5</string>
 											<string>8061CC6111CFD3C8007A83A5</string>
 											<string>8061CC9611CFD5D5007A83A5</string>
 											<string>8061CCAB11CFE2C0007A83A5</string>
 											<string>8061CCB211CFE371007A83A5</string>
-											<string>8061CCBD11CFE475007A83A5</string>
+											<string>8079FD6911CFE80B00897D0C</string>
+											<string>8079FD7911CFE93C00897D0C</string>
+											<string>8079FD7A11CFE93C00897D0C</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -562,6 +563,7 @@
 	<key>WindowOrderList</key>
 	<array>
 		<string>1CD10A99069EF8BA00B06720</string>
+		<string>1C530D57069F1CE1000CFCEE</string>
 		<string>80CA48D911B9A6E0007D8A88</string>
 		<string>/Users/comex/frash/Player2/Player2.xcodeproj</string>
 	</array>
@@ -587,7 +589,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string></string>
+								<string>IOSurface.h</string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -604,6 +606,8 @@
 							<string>486pt</string>
 						</dict>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -656,7 +660,7 @@
 			<key>WindowToolGUID</key>
 			<string>80CA48D911B9A6E0007D8A88</string>
 			<key>WindowToolIsVisible</key>
-			<false/>
+			<true/>
 		</dict>
 		<dict>
 			<key>FirstTimeWindowDisplayed</key>
@@ -805,7 +809,7 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CDD528C0622207200134675</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>server.m</string>
+										<string>FlashViewController.m</string>
 										<key>StatusBarVisibility</key>
 										<true/>
 									</dict>
@@ -861,8 +865,8 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1C530D57069F1CE1000CFCEE</string>
-				<string>8061CC6A11CFD420007A83A5</string>
-				<string>8061CC6B11CFD420007A83A5</string>
+				<string>8079FD7C11CFE93C00897D0C</string>
+				<string>8079FD7D11CFE93C00897D0C</string>
 				<string>1CDD528C0622207200134675</string>
 				<string>1CD0528E0623707200166675</string>
 			</array>

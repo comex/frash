@@ -74,7 +74,7 @@
 }
 
 - (NSDictionary *)paramsDict {
-	return [NSDictionary dictionaryWithValue:@"file:///var/mobile/firestorm2.swf" forKey:@"src"];
+	return [NSDictionary dictionaryWithObject:@"file:///var/mobile/firestorm2.swf" forKey:@"src"];
 }
 
 

@@ -128,6 +128,14 @@
 			8061CCB311CFE371007A83A5 = 8061CCB311CFE371007A83A5 /* PBXTextBookmark */;
 			8061CCBD11CFE475007A83A5 = 8061CCBD11CFE475007A83A5 /* PBXTextBookmark */;
 			8079FD5911CFE48800897D0C /* PBXTextBookmark */ = 8079FD5911CFE48800897D0C /* PBXTextBookmark */;
+			8079FD6911CFE80B00897D0C /* PBXTextBookmark */ = 8079FD6911CFE80B00897D0C /* PBXTextBookmark */;
+			8079FD6A11CFE80B00897D0C /* XCBuildMessageTextBookmark */ = 8079FD6A11CFE80B00897D0C /* XCBuildMessageTextBookmark */;
+			8079FD6B11CFE80B00897D0C /* PBXTextBookmark */ = 8079FD6B11CFE80B00897D0C /* PBXTextBookmark */;
+			8079FD6E11CFE84800897D0C /* PBXTextBookmark */ = 8079FD6E11CFE84800897D0C /* PBXTextBookmark */;
+			8079FD7911CFE93C00897D0C /* PBXTextBookmark */ = 8079FD7911CFE93C00897D0C /* PBXTextBookmark */;
+			8079FD7A11CFE93C00897D0C /* PBXTextBookmark */ = 8079FD7A11CFE93C00897D0C /* PBXTextBookmark */;
+			8079FD7B11CFE93C00897D0C /* PBXTextBookmark */ = 8079FD7B11CFE93C00897D0C /* PBXTextBookmark */;
+			8079FD7E11CFE94000897D0C /* PBXTextBookmark */ = 8079FD7E11CFE94000897D0C /* PBXTextBookmark */;
 			808456D311CFD34100E50E8C = 808456D311CFD34100E50E8C /* PBXTextBookmark */;
 			809F399611C56AF000BEA734 = 809F399611C56AF000BEA734 /* PBXTextBookmark */;
 			809F399811C56AF000BEA734 = 809F399811C56AF000BEA734 /* PBXTextBookmark */;
@@ -317,6 +325,82 @@
 		vrLen = 1325;
 		vrLoc = 1224;
 	};
+	8079FD6911CFE80B00897D0C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 80B703BA11CFCDD40039423C /* PluginFlashView.m */;
+		name = "PluginFlashView.m: 92";
+		rLen = 0;
+		rLoc = 2189;
+		rType = 0;
+		vrLen = 1124;
+		vrLoc = 0;
+	};
+	8079FD6A11CFE80B00897D0C /* XCBuildMessageTextBookmark */ = {
+		isa = PBXTextBookmark;
+		comments = "IOSurface/IOSurfaceBase.h: No such file or directory";
+		fRef = 809F398A11C56AD400BEA734 /* IOSurface.h */;
+		fallbackIsa = XCBuildMessageTextBookmark;
+		rLen = 1;
+		rLoc = 11;
+		rType = 1;
+	};
+	8079FD6B11CFE80B00897D0C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 809F398A11C56AD400BEA734 /* IOSurface.h */;
+		name = "IOSurface.h: 12";
+		rLen = 0;
+		rLoc = 155;
+		rType = 0;
+		vrLen = 236;
+		vrLoc = 0;
+	};
+	8079FD6E11CFE84800897D0C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 809F398A11C56AD400BEA734 /* IOSurface.h */;
+		name = "IOSurface.h: 12";
+		rLen = 0;
+		rLoc = 155;
+		rType = 0;
+		vrLen = 236;
+		vrLoc = 0;
+	};
+	8079FD7911CFE93C00897D0C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 809F398A11C56AD400BEA734 /* IOSurface.h */;
+		name = "IOSurface.h: 16";
+		rLen = 0;
+		rLoc = 236;
+		rType = 0;
+		vrLen = 236;
+		vrLoc = 0;
+	};
+	8079FD7A11CFE93C00897D0C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 809F3A9411C57AFC00BEA734 /* FlashViewController.m */;
+		rLen = 14;
+		rLoc = 2214;
+		rType = 0;
+	};
+	8079FD7B11CFE93C00897D0C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 809F3A9411C57AFC00BEA734 /* FlashViewController.m */;
+		name = "FlashViewController.m: 77";
+		rLen = 14;
+		rLoc = 2214;
+		rType = 0;
+		vrLen = 1428;
+		vrLoc = 1522;
+	};
+	8079FD7E11CFE94000897D0C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 809F3A9411C57AFC00BEA734 /* FlashViewController.m */;
+		name = "FlashViewController.m: 77";
+		rLen = 0;
+		rLoc = 2235;
+		rType = 0;
+		vrLen = 1429;
+		vrLoc = 1522;
+	};
 	807BC4D411CD293000B97139 /* food_rpc2.c */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1171, 5759}}";
@@ -382,8 +466,8 @@
 	809F398A11C56AD400BEA734 /* IOSurface.h */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1119, 677}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{0, 216}";
+			sepNavSelRange = "{236, 0}";
+			sepNavVisRange = "{0, 236}";
 		};
 	};
 	809F398B11C56AD400BEA734 /* IOSurfaceAPI.h */ = {
@@ -439,9 +523,9 @@
 	};
 	809F3A9411C57AFC00BEA734 /* FlashViewController.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1146, 1651}}";
-			sepNavSelRange = "{848, 7}";
-			sepNavVisRange = "{839, 972}";
+			sepNavIntBoundsRect = "{{0, 0}, {1146, 1729}}";
+			sepNavSelRange = "{2235, 0}";
+			sepNavVisRange = "{1522, 1429}";
 		};
 	};
 	80B7030911CE8A6D0039423C /* [URLDude initWithStream:URL:rpc_fd] */ = {
@@ -553,9 +637,9 @@
 	};
 	80B703BA11CFCDD40039423C /* PluginFlashView.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1119, 1443}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1119, 1534}}";
 			sepNavSelRange = "{2189, 0}";
-			sepNavVisRange = "{1224, 1325}";
+			sepNavVisRange = "{0, 1124}";
 			sepNavWindowFrame = "{{38, 93}, {972, 759}}";
 		};
 	};
