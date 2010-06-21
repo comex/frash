@@ -22,6 +22,7 @@
 	Server *server;
 }
 @property (retain) Server *server;
+
 - (void)useSurface:(IOSurfaceRef)sfc;
 - (void)displaySync;
 - (CGSize)movieSize;

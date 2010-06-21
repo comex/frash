@@ -8,6 +8,7 @@
 
 #import "PluginFlashView.h"
 #import <QuartzCore/QuartzCore.h>
+#include "food_rpc2.h"
 
 @interface NSObject (FakeMethodsToMakeGCCShutUp)
 
@@ -19,12 +20,18 @@
 
 @implementation PluginFlashView
 
-
+- (void)makeServer {
+	[self.server teardown];
+	self.server = [[[Server alloc] initWithDelegate:self] autorelease];
+	rpcfd = self.server.rpc_fd;	
+}
 
 - (id)initWithArguments:(NSDictionary *)arguments_ {
 	if(self = [super init]) {
 		arguments = [arguments_ retain];
 		self.backgroundColor = [UIColor grayColor];
+		NSLog(@"Making server...");
+		[self makeServer];
 	}
 	return self;	   
 }
@@ -37,7 +44,7 @@
 	//NSDictionary *pluginDict = [newArguments objectForKey:@"WebPlugInAttributesKey"];	
 	//NSString *flashURL = [pluginDict objectForKey:@"src"];
 	
-    return [[[self alloc] initWithArguments:arguments] autorelease];
+    return [[[PluginFlashView alloc] initWithArguments:arguments] autorelease];
 }
 
 
@@ -105,6 +112,34 @@
 	if(oldContents) CGImageRelease(oldContents);	
     [super dealloc];
 }
+
+#define kDown_ANPTouchAction        0
+#define kUp_ANPTouchAction          1
+#define kMove_ANPTouchAction        2
+#define kCancel_ANPTouchAction      3
+
+- (id)initWithFrame:(CGRect)frame {
+    if ((self = [super initWithFrame:frame])) {
+		CALayer *lyr = self.layer;
+		lyr.backgroundColor = [[UIColor blackColor] CGColor];
+		self.multipleTouchEnabled = YES;
+    }
+    return self;
+}
+
+#define foo(func, num) \
+- (void)func:(NSSet *)touches withEvent:(UIEvent *)event { \
+for(UITouch *t in touches) { \
+CGPoint location = [t locationInView:self]; \
+touch(rpcfd, num, location.x, location.y); \
+} \
+} 
+
+foo(touchesBegan, kDown_ANPTouchAction)
+foo(touchesMoved, kMove_ANPTouchAction)
+foo(touchesEnded, kUp_ANPTouchAction)
+foo(touchesCancelled, kCancel_ANPTouchAction)
+
 
 @synthesize server;
 @end
