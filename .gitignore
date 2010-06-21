@@ -10,3 +10,4 @@ Player2/IOSurface
 *.o
 food_rpc*.*
 *.dylib
+*comex*
