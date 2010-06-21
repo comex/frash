@@ -1,0 +1,13 @@
+#!/bin/sh
+ 
+hasGTA=`expr "$*" : '.* -gta .*'`;
+objpath=${!#}`expr ${!#} : '.*\(/[^/]\{1,\}\)\.app$'`;
+ 
+if [[ $hasGTA == 0 ]]; then
+ /usr/bin/ldid -S $objpath;
+else
+ TF=`mktemp -t x`;
+ echo "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>get-task-allow</key><true/><key>task_for_pid-allow</key><true/></dict></plist>" > $TF;
+ /usr/bin/ldid -S$TF $objpath;
+ rm $TF;
+fi;
