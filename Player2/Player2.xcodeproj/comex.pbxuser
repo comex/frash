@@ -136,6 +136,7 @@
 			8079FD7A11CFE93C00897D0C /* PBXTextBookmark */ = 8079FD7A11CFE93C00897D0C /* PBXTextBookmark */;
 			8079FD7B11CFE93C00897D0C /* PBXTextBookmark */ = 8079FD7B11CFE93C00897D0C /* PBXTextBookmark */;
 			8079FD7E11CFE94000897D0C /* PBXTextBookmark */ = 8079FD7E11CFE94000897D0C /* PBXTextBookmark */;
+			8079FD8511D0012100897D0C /* PBXTextBookmark */ = 8079FD8511D0012100897D0C /* PBXTextBookmark */;
 			808456D311CFD34100E50E8C = 808456D311CFD34100E50E8C /* PBXTextBookmark */;
 			809F399611C56AF000BEA734 = 809F399611C56AF000BEA734 /* PBXTextBookmark */;
 			809F399811C56AF000BEA734 = 809F399811C56AF000BEA734 /* PBXTextBookmark */;
@@ -401,6 +402,16 @@
 		vrLen = 1429;
 		vrLoc = 1522;
 	};
+	8079FD8511D0012100897D0C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 809F3A9411C57AFC00BEA734 /* FlashViewController.m */;
+		name = "FlashViewController.m: 77";
+		rLen = 0;
+		rLoc = 2235;
+		rType = 0;
+		vrLen = 1564;
+		vrLoc = 0;
+	};
 	807BC4D411CD293000B97139 /* food_rpc2.c */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1171, 5759}}";
@@ -465,7 +476,7 @@
 	};
 	809F398A11C56AD400BEA734 /* IOSurface.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1119, 677}}";
+			sepNavIntBoundsRect = "{{0, 0}, {850, 454}}";
 			sepNavSelRange = "{236, 0}";
 			sepNavVisRange = "{0, 236}";
 		};
@@ -523,9 +534,9 @@
 	};
 	809F3A9411C57AFC00BEA734 /* FlashViewController.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1146, 1729}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1146, 1807}}";
 			sepNavSelRange = "{2235, 0}";
-			sepNavVisRange = "{1522, 1429}";
+			sepNavVisRange = "{0, 1564}";
 		};
 	};
 	80B7030911CE8A6D0039423C /* [URLDude initWithStream:URL:rpc_fd] */ = {
@@ -697,9 +708,9 @@
 	};
 	80CA48AD11B81787007D8A88 /* server.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1119, 3809}}";
-			sepNavSelRange = "{6170, 0}";
-			sepNavVisRange = "{5316, 1563}";
+			sepNavIntBoundsRect = "{{0, 0}, {847, 4134}}";
+			sepNavSelRange = "{5668, 0}";
+			sepNavVisRange = "{5627, 1147}";
 			sepNavWindowFrame = "{{15, 114}, {972, 759}}";
 		};
 	};

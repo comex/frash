@@ -199,11 +199,14 @@ int display_sync(int rpc_fd) {
 }
 
 int new_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len) {
+	Server *self = get_server(rpc_fd);		
 	if(!memcmp(url, "javascript:", 11)) {
-		if(!strcmp(url, "javascript:top.location+\"__flashplugin_unique__\"")) return 1;
-		char *ret = "file:///var/mobile/firestorm.html";
-		connection_response(rpc_fd, stream, "", 0, strlen(ret));
-		connection_got_data(rpc_fd, stream, ret, strlen(ret));
+		NSString *str = [[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding];
+		NSString *ret = [[self->delegate performSelector:@selector(evaluateWebScript:) withObject:str] description];
+		[str release];
+		NSData *data = [ret dataUsingEncoding:NSUTF8StringEncoding];
+		connection_response(rpc_fd, stream, "", 0, [data length]);
+		connection_got_data(rpc_fd, stream, (void *) [data bytes], [data length]);
 		connection_all_done(rpc_fd, stream, true);
 		return 0;
 	}
