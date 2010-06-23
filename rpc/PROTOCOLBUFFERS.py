@@ -482,6 +482,7 @@ int rpcserve_thread_(int rpcfd, CFRunLoopSourceRef src, pthread_mutex_t *mut, CF
     while(1) {
         struct hdr hdr;
         if(recv(rpcfd, &hdr, sizeof(hdr), MSG_WAITALL) != sizeof(hdr)) {
+            if(errno == EAGAIN) continue;
             return -errno;
         }
         if(hdr.magic != 0x12345678) {

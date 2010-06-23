@@ -135,9 +135,9 @@ void logpatched(int x, const char *format, ...) {
 }
 
 static void do_patches() {
-    *((uint32_t *) 0x0213dfd4) = 0x46c04778;
-    *((uint32_t *) 0x0213dfd8) = 0xe51ff004;
-    *((void **)    0x0213dfdc) = stubify(logpatched, "logpatched", false);
+    //*((uint32_t *) 0x0213dfd4) = 0x46c04778;
+    //*((uint32_t *) 0x0213dfd8) = 0xe51ff004;
+    //*((void **)    0x0213dfdc) = stubify(logpatched, "logpatched", false);
 }
 
 extern void fds_init();

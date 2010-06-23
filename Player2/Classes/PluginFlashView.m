@@ -28,11 +28,29 @@
 		set_movie_size(rpcfd, size.width, size.height);	
 }	
 
-- (void)makeServer {
+
+- (void)webPlugInStop {
+	if(sfc) {
+		CFRelease(sfc);
+		sfc = NULL;
+	}
 	[self.server teardown];
+	if(label) {
+		[label removeFromSuperview];
+		[label release];
+		label = nil;
+	}
+	self.layer.contents = nil;
+	rpcfd = 0;
+}
+
+
+- (void)webPlugInStart {
+	NSLog(@"webPlugInStart");
+	[self webPlugInStop];	
 	self.server = [[[Server alloc] initWithDelegate:self] autorelease];
 	rpcfd = self.server.rpc_fd;	
-	[self setSizeIfNecessary];
+	[self setSizeIfNecessary];	
 }
 
 
@@ -40,9 +58,7 @@
 	if(self = [super init]) {
 		arguments = [arguments_ retain];
 		//self.contentMode = UIViewContentModeRedraw;		
-		self.backgroundColor = [UIColor grayColor];
-		NSLog(@"Making server...");
-		[self makeServer];
+		//self.backgroundColor = [UIColor grayColor];
 	}
 	return self;	   
 }
