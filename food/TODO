@@ -1,0 +1,9 @@
+- pthread_cond_timedwait
+- invocation arguments
+- make Flash shut up when home is pressed (but Safari is not actually stopped)
+- fix EAGAIN 
+- make it think it's fullscreen or otherwise fix mouse
+- keyboard
+- NEON
+- video?
+- overzoom

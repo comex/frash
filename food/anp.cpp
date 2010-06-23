@@ -1138,7 +1138,8 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
     }
     if(temp_sz != IOSurfaceGetAllocSize(sfc)) {
         if(temp) free(temp);
-        temp = calloc(1, IOSurfaceGetAllocSize(sfc) + 1);
+        temp = calloc(1, IOSurfaceGetAllocSize(sfc));
+        //memset(temp, 0xff, IOSurfaceGetAllocSize(sfc));
         temp_sz = IOSurfaceGetAllocSize(sfc);
     }
     bitmap->baseAddr = temp;
@@ -1150,21 +1151,13 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
 }
 
 //#include <fcntl.h>
+extern "C" void rgba_bgra_copy(void *dest, void *src, void *end);
 void surface_impl_unlock(JNIEnv* env, jobject surface) {
     notice("%s surface=%p", __func__, surface);
     if(!sfc || !IOSurfaceGetWidth(sfc) || !IOSurfaceGetHeight(sfc)) return;
-    uint32_t *ptr = (uint32_t *) temp;
-    uint32_t *ptr2 = (uint32_t *) IOSurfaceGetBaseAddress(sfc);
-    uint32_t *end = (uint32_t *) ((char*)ptr + IOSurfaceGetAllocSize(sfc));
-    while(ptr + 1 <= end) {
-        uint32_t val = *ptr;
-        uint32_t val2 = (val & 0xff00ff00) |
-                        ((val & 0x00ff0000) >> 16) |
-                        ((val & 0x000000ff) << 16);
-        *ptr2 = val2;
-        ptr++;
-        ptr2++;
-    }
+    void *end = (void *) ((char*)temp + IOSurfaceGetAllocSize(sfc));
+    rgba_bgra_copy(IOSurfaceGetBaseAddress(sfc), temp, end);
+    //memcpy(IOSurfaceGetBaseAddress(sfc), temp, IOSurfaceGetAllocSize(sfc));
     /*int fd = open("foo.txt", O_WRONLY | O_CREAT, 0755);
     write(fd, IOSurfaceGetBaseAddress(sfc), IOSurfaceGetAllocSize(sfc));
     close(fd);*/

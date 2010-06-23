@@ -351,7 +351,7 @@ void init_classes() {
 static IOSurfaceRef make_iosurface() {
     CFMutableDictionaryRef dict;
     int pitch = movie_w * 4;
-    int allocSize = pitch * movie_h;
+    int allocSize = pitch * movie_h + 64;
     int bytesPerElement = 4;
     char pixelFormat[4] = {'A', 'R', 'G', 'B'};
 

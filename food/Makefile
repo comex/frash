@@ -22,7 +22,7 @@ myjni.o: myjni.c multistuff.settings.h
 	gcc-4.2 $(STUFF) -c -o $@ $<
 
 
-OBJS := food.o np.o anp.o multistuff.o common.o myjni.o classes.o fixups/cfixups.o fixups/cppfixups.o fixups/rthread.o fixups/sfixups.o
+OBJS := food.o np.o anp.o neon.o multistuff.o common.o myjni.o classes.o fixups/cfixups.o fixups/cppfixups.o fixups/rthread.o fixups/sfixups.o
 food: ../rpc/food_rpc1.h $(OBJS)
 	g++-4.2 $(STUFF) -o food $(OBJS) ../rpc/food_rpc1.o -F$(SDK)/System/Library/Frameworks -F$(SDK)/System/Library/PrivateFrameworks -framework CoreGraphics -framework IOSurface -framework CoreFoundation -framework CoreText -framework AudioToolbox -framework GraphicsServices -image_base 0x08000000
 
