@@ -601,28 +601,6 @@ const char* typeface_impl_getFontDirectoryPath() {
 
 // ANPWindowInterfaceV0
 //
-//
-IOSurfaceRef create_surface() {
-    CFMutableDictionaryRef dict = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    CFDictionarySetValue(dict, CFSTR("IOSurfaceIsGlobal"), kCFBooleanTrue);
-    int val = (int) 'ARGB'; // LE
-    CFDictionarySetValue(dict, CFSTR("IOSurfacePixelFormat"), CFNumberCreate(NULL,                   kCFNumberSInt32Type, &val));
-    val = 768;
-    CFDictionarySetValue(dict, CFSTR("IOSurfaceHeight"), CFNumberCreate(NULL, kCFNumberSInt32Type,   &val));
-    CFDictionarySetValue(dict, CFSTR("IOSurfaceBufferTileMode"), kCFBooleanFalse);
-    val = 4096;
-    CFDictionarySetValue(dict, CFSTR("IOSurfaceBytesPerRow"), CFNumberCreate(NULL,                   kCFNumberSInt32Type, &val));
-    val = 4;
-    CFDictionarySetValue(dict, CFSTR("IOSurfaceBytesPerElement"), CFNumberCreate(NULL,               kCFNumberSInt32Type, &val));
-    val = 3145728;
-    CFDictionarySetValue(dict, CFSTR("IOSurfaceAllocSize"), CFNumberCreate(NULL,                     kCFNumberSInt32Type, &val));
-    val = 1024;
-    CFDictionarySetValue(dict, CFSTR("IOSurfaceWidth"), CFNumberCreate(NULL, kCFNumberSInt32Type,    &val));
-    CFDictionarySetValue(dict, CFSTR("IOSurfaceMemoryRegion"), CFSTR("PurpleGfxMem"));
-
-    return IOSurfaceCreate(dict);
-}
-
 // inval may be null
 // todo: send the rect along over ipc
 
@@ -1148,17 +1126,25 @@ void event_impl_postEvent(NPP inst, const ANPEvent* event) {
     event_postEvent(inst, event);
 }
 
+static void *temp;
+static size_t temp_sz;
+
 // ANPSurfaceInterfaceV0
 extern "C" void refresh_size();
 bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI* dirtyRect) {
     notice("%s surface=%p", __func__, surface);
-    if(pending_movie_w != movie_w) {
+    if(pending_movie_w != movie_w || pending_movie_h != movie_h) {
         refresh_size();
     }
-    bitmap->baseAddr = IOSurfaceGetBaseAddress(sfc);
+    if(temp_sz != IOSurfaceGetAllocSize(sfc)) {
+        if(temp) free(temp);
+        temp = calloc(1, IOSurfaceGetAllocSize(sfc) + 1);
+        temp_sz = IOSurfaceGetAllocSize(sfc);
+    }
+    bitmap->baseAddr = temp;
     bitmap->format = kRGBA_8888_ANPBitmapFormat;
-    bitmap->width = IOSurfaceGetWidth(sfc);
-    bitmap->height = IOSurfaceGetHeight(sfc);
+    bitmap->width = sfc ? IOSurfaceGetWidth(sfc) : 0;
+    bitmap->height = sfc ? IOSurfaceGetHeight(sfc) : 0;
     bitmap->rowBytes = bitmap->width * 4;
     return true;
 }
@@ -1166,6 +1152,19 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
 //#include <fcntl.h>
 void surface_impl_unlock(JNIEnv* env, jobject surface) {
     notice("%s surface=%p", __func__, surface);
+    if(!sfc || !IOSurfaceGetWidth(sfc) || !IOSurfaceGetHeight(sfc)) return;
+    uint32_t *ptr = (uint32_t *) temp;
+    uint32_t *ptr2 = (uint32_t *) IOSurfaceGetBaseAddress(sfc);
+    uint32_t *end = (uint32_t *) ((char*)ptr + IOSurfaceGetAllocSize(sfc));
+    while(ptr + 1 <= end) {
+        uint32_t val = *ptr;
+        uint32_t val2 = (val & 0xff00ff00) |
+                        ((val & 0x00ff0000) >> 16) |
+                        ((val & 0x000000ff) << 16);
+        *ptr2 = val2;
+        ptr++;
+        ptr2++;
+    }
     /*int fd = open("foo.txt", O_WRONLY | O_CREAT, 0755);
     write(fd, IOSurfaceGetBaseAddress(sfc), IOSurfaceGetAllocSize(sfc));
     close(fd);*/
@@ -1433,7 +1432,7 @@ extern "C" void post_mouse_event(ANPMouseAction action, int32_t x, int32_t y) {
 }
 
 extern "C" int touch(int rpcfd, int action, int x, int y) {
-    notice("touch!");
+    log("touch! (%d, %d)", x, y);
     ANPEvent *event = new ANPEvent;
     event->inSize = sizeof(*event);
     event->eventType = kTouch_ANPEventType;

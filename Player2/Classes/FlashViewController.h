@@ -14,7 +14,6 @@
 @interface FlashViewController : UIViewController {
 	IOSurfaceRef sfc;
 	CGImageRef oldContents;
-	CGDataProviderRef provider;
 	int rpcfd;
 	Server *server;
 }

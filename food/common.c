@@ -11,8 +11,8 @@
 
 int food;
 
-int movie_w = -1, movie_h = -1;
-int pending_movie_w = -1, pending_movie_h = -1;
+int movie_w = 0, movie_h = -1;
+int pending_movie_w = 0, pending_movie_h = -1;
 
 void pattern(void *stuff, uint32_t base, int len) {
     uint32_t *p = stuff;

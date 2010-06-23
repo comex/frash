@@ -349,10 +349,10 @@ int connection_response(int rpcfd, NPStream *stream, void *headers, size_t heade
 }
 
 int connection_got_data(int rpcfd, NPStream *stream, void *data, size_t data_len) {
-    log("connection_got_data [%p]: %d bytes", stream, data_len);
+    notice("connection_got_data [%p]: %d bytes", stream, data_len);
     int wsize = pluginfuncs.writeready(&nppt, stream);
     _assert(wsize >= data_len);
-    log("wsize = %d", wsize);
+    notice("wsize = %d", wsize);
     int *offset_p = (int *) &stream->ndata;
     int ret = pluginfuncs.write(&nppt, stream, *offset_p, data_len, data);
     *offset_p += data_len;
@@ -360,7 +360,7 @@ int connection_got_data(int rpcfd, NPStream *stream, void *data, size_t data_len
         err("connection_got_data: wanted to write %d bytes but only sent %d (wsize = %d)", data_len, ret, wsize);
         _abort();
     }
-    log("sent.");
+    notice("sent.");
     free(data);
     return 0;
 }
@@ -389,15 +389,13 @@ NPError NPN_GetURLNotify(NPP    instance,
     NPStream *stream = malloc(sizeof(NPStream));
     stream->pdata = NULL;
     stream->ndata = NULL;
-    stream->url = strdup(url);
     stream->end = 0;
     stream->lastmodified = 0;
     stream->notifyData = notifyData;
     stream->headers = NULL;
-    if(!url) url = "";
     if(!target) target = "";
     log("GetURLNotify: [%s] [%s] (stream=%p)", url, target, stream);
-    _assertZero(new_connection(food, stream, (char *) url, strlen(url), (char *) target, strlen(target)));
+    _assertZero(new_connection(food, stream, (char *) url, strlen(url), (char *) target, strlen(target), (void **) &stream->url, NULL));
     return 0;
 }
 
@@ -431,6 +429,12 @@ bool NPN_Evaluate(NPP npp, NPObject *obj, NPString *script, NPVariant *result) {
     _assertZero(evaluate_web_script(food, (void *) script->UTF8Characters, script->UTF8Length, &ret));
     *((struct NPFuckedUpVariant *) result) = variant_for_object_name(ret);
     return true;
+}
+
+void NPN_PushPopupsEnabledState(NPP npp, NPBool enabled) {
+}
+
+void NPN_PopPopupsEnabledState(NPP npp) {
 }
 
 void handle_event(void *event) {
@@ -482,6 +486,8 @@ static void init_funcs() {
     funcs.unscheduletimer = stub(NPN_UnscheduleTimer);
     funcs.evaluate = stub(NPN_Evaluate);
     funcs.invoke = stub(NPN_Invoke);
+    funcs.pushpopupsenabledstate = stub(NPN_PushPopupsEnabledState);
+    funcs.poppopupsenabledstate = stub(NPN_PopPopupsEnabledState);
 
     pattern(&pluginfuncs, 0xbeef0000, sizeof(pluginfuncs));
     pluginfuncs.size = sizeof(pluginfuncs);
@@ -490,10 +496,6 @@ static void init_funcs() {
 static char *src; 
 
 void go(NP_InitializeFuncPtr NP_Initialize_ptr, void *JNI_OnLoad_ptr_) {
-    while(movie_w == -1) {
-        _assert(CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1000, true) == kCFRunLoopRunHandledSource);
-    }
-
     init_idproxy_class();
 
     JNI_OnLoad_ptr = JNI_OnLoad_ptr_;
@@ -565,13 +567,13 @@ void go(NP_InitializeFuncPtr NP_Initialize_ptr, void *JNI_OnLoad_ptr_) {
 } 
 
 static void even_later(CFRunLoopTimerRef a, void *b) {
-    notice("---- EVEN LATER ----");
-    post_lifecycle_event(kOnLoad_ANPLifecycleAction);
-    post_lifecycle_event(kGainFocus_ANPLifecycleAction);
+    log("---- EVEN LATER ----");
 }
 
 static void later(CFRunLoopTimerRef a, void *b) {
-    notice("---- LATER ----");
+    log("---- LATER ----");
     post_lifecycle_event(kOnScreen_ANPLifecycleAction);
-    NPN_GetURLNotify(&nppt, src, "", MAP_FAILED);
+    post_lifecycle_event(kGainFocus_ANPLifecycleAction);
+    post_lifecycle_event(kOnLoad_ANPLifecycleAction);
+    NPN_GetURLNotify(&nppt, src, NULL, MAP_FAILED);
 }

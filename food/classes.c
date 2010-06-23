@@ -18,6 +18,10 @@ extern JNIEnv env;
 
 IOSurfaceRef sfc = NULL;
 
+void refresh_size();
+static int already_created_surface = 0;
+
+
 struct method_generic { void *v; void *a; };
 
 void *make_av(void *a, void *v) {
@@ -172,7 +176,7 @@ jobject afdGetFD(jobject obj, jvalue *a) {
 static int oemcfg_fd, devnull_fd;
 
 void fds_init() {
-    // Do this before we get sand in our shoes
+    // Do this before we get sandy
     oemcfg_fd = open("oem.cfg", O_RDONLY);
     devnull_fd = open("/dev/null", O_RDONLY);
 }
@@ -220,6 +224,7 @@ void getLocationOnScreen(jobject obj, jvalue *val) {
 }
 
 jobject new_fps(jclass cls, va_list v) {
+    log("new_fps");
     jobject ctx = va_arg(v, jobject);
     jint one = va_arg(v, jint);
     jint two = va_arg(v, jint);
@@ -235,9 +240,8 @@ jobject new_fps(jclass cls, va_list v) {
     
     fps_obj = new_jobject(fps);
     fps_npp = (void *) one;
+    refresh_size();
     
-    do_jni_surface_created((void *) one, fps_obj);
-
     return fps_obj;
 }
 
@@ -344,8 +348,6 @@ void init_classes() {
     android_context = new_jobject(context);
 }
 
-static int already_created_surface = 0;
-
 static IOSurfaceRef make_iosurface() {
     CFMutableDictionaryRef dict;
     int pitch = movie_w * 4;
@@ -375,10 +377,29 @@ static IOSurfaceRef make_iosurface() {
     return ret;
 }
 
+void do_jni_surface_created(NPP npp_, jobject j) {
+    log("do_jni_surface_created");
+    int npp = typeRefToInt(g(j, "npp"));
+    dict cls = (dict) g(classes, "com/adobe/flashplayer/FlashPaintSurface");
+    //jboolean (*nioge)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeIsOpenGLEnabled[(I)Z]"));
+    //jboolean (*nias)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeIsARGBSurface[(I)Z]"));
+    void (*nsc)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeSurfaceCreated[(I)V]"));
+    void (*segl)(JNIEnv *, jobject, jobject) = RawPtrGet(g(cls, "nativeSetEGL[(ILcom/adobe/flashplayer/FlashEGL;)V]"));
+
+    nsc(&env, j, npp);
+    dict egl = named_dict("aFlashEGL");
+    segl(&env, j, new_jobject(egl));
+
+    already_created_surface = 1;
+}
+
 
 void do_jni_surface_changed(NPP npp, jobject j) {
+    if(pending_movie_w < 2 || pending_movie_h < 2) return;
     movie_w = pending_movie_w;
     movie_h = pending_movie_h;
+    log("do_jni_surface_changed");
+    if(!already_created_surface) do_jni_surface_created(npp, j);
     dict cls = (dict) g(classes, "com/adobe/flashplayer/FlashPaintSurface");
     void (*nsch)(JNIEnv *, jobject, jint, jint, jint, jint) = RawPtrGet(g(cls, "nativeSurfaceChanged[(IIII)V]"));
     nsch(&env, j, (int) npp, 1 /* rgba 888; 565 => 2; see FPS$2.ddx */, movie_w, movie_h);
@@ -392,22 +413,6 @@ void do_jni_surface_changed(NPP npp, jobject j) {
     sfc = make_iosurface();     
 
     _assertZero(use_surface(food, (int) IOSurfaceGetID(sfc)));
-}
-
-void do_jni_surface_created(NPP npp_, jobject j) {
-    int npp = typeRefToInt(g(j, "npp"));
-    dict cls = (dict) g(classes, "com/adobe/flashplayer/FlashPaintSurface");
-    //jboolean (*nioge)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeIsOpenGLEnabled[(I)Z]"));
-    //jboolean (*nias)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeIsARGBSurface[(I)Z]"));
-    void (*nsc)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeSurfaceCreated[(I)V]"));
-    void (*segl)(JNIEnv *, jobject, jobject) = RawPtrGet(g(cls, "nativeSetEGL[(ILcom/adobe/flashplayer/FlashEGL;)V]"));
-
-    nsc(&env, j, npp);
-    dict egl = named_dict("aFlashEGL");
-    segl(&env, j, new_jobject(egl));
-
-    already_created_surface = 1;
-    do_jni_surface_changed(npp_, j);
 }
 
 jclass system_impl_loadJavaClass(NPP instance, const char* className) {
@@ -430,16 +435,15 @@ jclass system_impl_loadJavaClass(NPP instance, const char* className) {
 //
 
 void refresh_size() {
+    log("refresh_size");
     do_jni_surface_changed(fps_npp, fps_obj);
 }
 
 int set_movie_size(int rpcfd, int w, int h) {
-    notice("set_movie_size: %dx%d", w, h);
+    if(pending_movie_w == w && pending_movie_h == h) return 0;
+    log("set_movie_size: %dx%d", w, h);
     pending_movie_w = w;
     pending_movie_h = h;
-    if(!already_created_surface) {
-        movie_w = w;
-        movie_h = h;
-    }
+    if(fps_npp && !already_created_surface) refresh_size();
     return 0;
 }

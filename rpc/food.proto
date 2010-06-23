@@ -4,7 +4,7 @@
 > async use_surface(int name);
 > async display_sync();
 > sync get_parameters(out buf params, out int params_count);
-> async new_connection(stream_t stream, buf url, buf target);
+> sync new_connection(stream_t stream, buf url, buf target, out buf url_abs);
 > sync get_window_object(out int obj);
 > sync evaluate_web_script(buf script, out int obj);
 > sync get_object_property(int obj, buf property, out int obj2);

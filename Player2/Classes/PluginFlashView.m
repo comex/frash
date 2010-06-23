@@ -14,6 +14,7 @@
 
 - (id)webFrame;
 - (id)windowObject;
+- (WebFrame *)findFrameNamed:(NSString *)name;
 
 @end
 
@@ -80,14 +81,14 @@
 }
 
 - (void)useSurface:(IOSurfaceRef)sfc_ {
+	if(sfc) CFRelease(sfc);
 	sfc = sfc_;
-	if(provider) CGDataProviderRelease(provider);
-	provider = CGDataProviderCreateWithData(NULL, IOSurfaceGetBaseAddress(sfc), IOSurfaceGetAllocSize(sfc), NULL);
-	oldContents = NULL;
 	
 }
 
 - (void)displaySync {
+	if(!sfc || !IOSurfaceGetWidth(sfc)) return;
+/*	CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, IOSurfaceGetBaseAddress(sfc), IOSurfaceGetAllocSize(sfc), NULL);
 	CGImageRef image = CGImageCreate(
 									 IOSurfaceGetWidth(sfc),
 									 IOSurfaceGetHeight(sfc),
@@ -100,9 +101,13 @@
 									 NULL,
 									 true,
 									 kCGRenderingIntentDefault);
+	
+	CFRelease(provider);
+	CFRelease(data);
 	self.layer.contents = (id) image;
-	if(oldContents) CGImageRelease(oldContents);
-	oldContents = image;
+ 	CFRelease(image);*/
+	self.layer.contents = (id) sfc;
+	self.layer.opacity = self.layer.opacity == 1.0 ? 0.9999 : 1.0;
 }
 
 - (NSDictionary *)paramsDict {
@@ -131,8 +136,8 @@
 - (void)dealloc {
 	[arguments release];
 	[label release];
+	if(sfc) CFRelease(sfc);
 	[self.server teardown];
-	if(oldContents) CGImageRelease(oldContents);	
     [super dealloc];
 }
 
@@ -165,6 +170,15 @@ foo(touchesMoved, kMove_ANPTouchAction)
 foo(touchesEnded, kUp_ANPTouchAction)
 foo(touchesCancelled, kCancel_ANPTouchAction)
 
+- (void)goToURL:(NSURL *)URL inFrame:(NSString *)frameName {
+	WebFrame *myframe = [[arguments objectForKey:@"WebPlugInContainerKey"] webFrame];
+	WebFrame *frame = [myframe findFrameNamed:frameName];
+	if(!frame) {
+		// It really should open a new window
+		frame = myframe;
+	}
+	[frame loadRequest:[NSURLRequest requestWithURL:URL]];
+}
 
 @synthesize server;
 @end

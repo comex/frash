@@ -46,5 +46,9 @@ foo(touchesCancelled, kCancel_ANPTouchAction)
     [super dealloc];
 }
 
+- (void)goToURL:(NSURL *)URL inFrame:(NSString *)frame {
+	NSLog(@"goToURL:%@ inFrame:%@", URL, frame);
+}
+
 
 @end

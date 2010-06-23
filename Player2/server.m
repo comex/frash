@@ -42,13 +42,11 @@ static Server *get_server(int rpc_fd) {
 }
 @end
 @implementation URLDude
-- (id)initWithStream:(stream_t)stream_ URL:(const char *)url baseURL:(NSURL *)baseURL rpc_fd:(int)rpc_fd_ {
+- (id)initWithStream:(stream_t)stream_ URL:(NSURL *)url rpc_fd:(int)rpc_fd_ {
 	if(self = [super init]) {
 		stream = stream_;
 		rpc_fd = rpc_fd_;
-		request = [[NSURLRequest alloc] initWithURL:
-				   [NSURL URLWithString:[NSString stringWithCString:url encoding:NSUTF8StringEncoding]
-						  relativeToURL:baseURL]];
+		request = [[NSURLRequest alloc] initWithURL:url];
 		
 	}
 	return self;
@@ -169,7 +167,7 @@ static void error(int rpc_fd, int err) {
 	if(sekrit) {
 		NSLog(@"Posting %s", sekrit);
 		notify_post(sekrit);
- 
+		free(sekrit);
 		sekrit = NULL;
 	}
 	
@@ -216,20 +214,39 @@ int display_sync(int rpc_fd) {
 	return 0;
 }
 
-int new_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len) {
-	Server *self = get_server(rpc_fd);		
+int new_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len, void **url_abs, size_t *url_abs_len) {
+	Server *self = get_server(rpc_fd);
+	NSString *str = [[[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding] autorelease];	
+	NSURL *nsurl = [NSURL URLWithString:str
+						  relativeToURL:[self->delegate baseURL]];	
+	if(target_len > 0) {
+		// This is wrong.
+		NSLog(@"new_connection with target %s", target);
+		
+		NSString *str2 = [[[NSString alloc] initWithBytes:target length:target_len encoding:NSUTF8StringEncoding] autorelease];		
+		[self->delegate performSelector:@selector(goToURL:inFrame:) withObject:nsurl withObject:str2];
+		*url_abs = url;
+		*url_abs_len = url_len;
+		return 0;
+	}
+	
 	if(!memcmp(url, "javascript:", 11)) {
-		NSString *str = [[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding];
 		NSString *ret = [[self->delegate performSelector:@selector(evaluateWebScript:) withObject:str] description];
-		[str release];
 		NSData *data = [ret dataUsingEncoding:NSUTF8StringEncoding];
 		connection_response(rpc_fd, stream, "", 0, [data length]);
 		connection_got_data(rpc_fd, stream, (void *) [data bytes], [data length]);
 		connection_all_done(rpc_fd, stream, true);
+		*url_abs = url;
+		*url_abs_len = url_len;
+		// leak
 		return 0;
 	}
-	NSURL *baseURL = [self->delegate baseURL];
-	[[[[URLDude alloc] initWithStream:stream URL:(char *)url baseURL:baseURL rpc_fd:rpc_fd] autorelease] start];
+	
+	NSString *abs = [nsurl absoluteString];
+	NSData *data = [abs dataUsingEncoding:NSUTF8StringEncoding];
+	*url_abs = (void *) [data bytes];
+	*url_abs_len = [data length];
+	[[[[URLDude alloc] initWithStream:stream URL:nsurl rpc_fd:rpc_fd] autorelease] start];
 	free(target);
 	free(url);
 	return 0;

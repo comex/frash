@@ -264,13 +264,15 @@ for line in open(sys.argv[1]):
         for out, argtype, argname in args:
             if out:
                 if argtype == 'buf':
-                    print '\t*%s_len = s.msg->%s_len;' % (argname, argname)
-                    print '\t*%s = malloc(*%s_len + 1);' % (argname, argname)
-                    print '\t*((char *)(*%s) + *%s_len) = 0;' % (argname, argname)
-                    print '\tmemcpy(*%s, extrap, *%s_len);' % (argname, argname)
-                    print '\textrap += *%s_len;' % argname
+                    print '\tif(%s_len) *%s_len = s.msg->%s_len;' % (argname, argname, argname)
+                    print '\tif(%s) {' % argname
+                    print '\t\t*%s = malloc(s.msg->%s_len + 1);' % (argname, argname)
+                    print '\t\t*((char *)(*%s) + s.msg->%s_len) = 0;' % (argname, argname)
+                    print '\t\tmemcpy(*%s, extrap, s.msg->%s_len);' % (argname, argname)
+                    print '\t}'
+                    print '\textrap += s.msg->%s_len;' % argname
                 else:
-                    print '\t*%s = s.msg->%s;' % (argname, argname)
+                    print '\tif(%s) *%s = s.msg->%s;' % (argname, argname, argname)
 
         print '\tpthread_cond_destroy(&s.cond);'
         print '\tpthread_mutex_destroy(&s.mut);'

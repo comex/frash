@@ -16,8 +16,6 @@
 	UILabel *label;
 	
 	IOSurfaceRef sfc;
-	CGImageRef oldContents;
-	CGDataProviderRef provider;
 	int rpcfd;
 	Server *server;
 }
