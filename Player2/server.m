@@ -18,6 +18,7 @@
 #include "server.h"
 #import <Foundation/Foundation.h>
 #include <unistd.h>
+#include <notify.h>
 
 #define BORING 0
 #define FOOD_ROOT "/var/mobile/"
@@ -29,7 +30,9 @@ static NSMutableDictionary *servers;
 static Server *get_server(int rpc_fd) {
 	return [servers objectForKey:[NSNumber numberWithInt:rpc_fd]];
 }
-
+/*@interface WebUndefined
++ (id)undefined;
+@end*/
 @interface URLDude : NSThread {
 	stream_t stream;
 	int rpc_fd;
@@ -39,11 +42,13 @@ static Server *get_server(int rpc_fd) {
 }
 @end
 @implementation URLDude
-- (id)initWithStream:(stream_t)stream_ URL:(const char *)url rpc_fd:(int)rpc_fd_ {
+- (id)initWithStream:(stream_t)stream_ URL:(const char *)url baseURL:(NSURL *)baseURL rpc_fd:(int)rpc_fd_ {
 	if(self = [super init]) {
 		stream = stream_;
 		rpc_fd = rpc_fd_;
-		request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:[NSString stringWithCString:url encoding:NSUTF8StringEncoding]]];
+		request = [[NSURLRequest alloc] initWithURL:
+				   [NSURL URLWithString:[NSString stringWithCString:url encoding:NSUTF8StringEncoding]
+						  relativeToURL:baseURL]];
 		
 	}
 	return self;
@@ -71,16 +76,14 @@ static Server *get_server(int rpc_fd) {
 }
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
 	NSLog(@"did receive response");
-	NSData *headers;
+	NSMutableData *headers = [[NSMutableData alloc] init];
+	[headers appendData:[@"HTTP/1.1 200 OK\n" dataUsingEncoding:NSUTF8StringEncoding]];
 	if([response isKindOfClass:[NSHTTPURLResponse class]]) {
-		NSMutableData *headers_ = [[NSMutableData alloc] init];
 		NSDictionary *headerFields = [(id)response allHeaderFields];
 		for(NSString *key in headerFields) {
 			NSString *value = [headerFields objectForKey:key];
-			[headers_ appendData:[[NSString stringWithFormat:@"%@: %@", key, value] dataUsingEncoding:NSUTF8StringEncoding]];
+			[headers appendData:[[NSString stringWithFormat:@"%@: %@\n", key, value] dataUsingEncoding:NSUTF8StringEncoding]];
 		}
-	} else {
-		headers = [[NSData alloc] init];
 	}
 	connection_response(rpc_fd, stream, (char *) [headers bytes], [headers length], [response expectedContentLength]);
 	[headers release];
@@ -93,11 +96,12 @@ static Server *get_server(int rpc_fd) {
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+	NSLog(@"connectionDidReceiveData");
 	connection_got_data(rpc_fd, stream, (void *) [data bytes], [data length]);
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection_ {
-	NSLog(@"ok it finished");
+	NSLog(@"connectionDidFinishLoading");
 	connection_all_done(rpc_fd, stream, true);
 	shouldKeepRunning = NO;
 }
@@ -144,9 +148,7 @@ static void error(int rpc_fd, int err) {
 
 	int ret = connect(rpc_fd, (struct sockaddr *) &addr, sizeof(addr));
 	if(ret != 0) {
-		[self performSelectorOnMainThread:@selector(dieWithError:)
-							   withObject:[NSString stringWithFormat:@"Could not connect: %s", strerror(errno)]
-							waitUntilDone:NO];
+		[self dieWithError:[NSString stringWithFormat:@"Could not connect: %s", strerror(errno)]];
 		return self;
 	}
 	int big = 120000;
@@ -164,6 +166,13 @@ static void error(int rpc_fd, int err) {
 }
 
 - (void)teardown {
+	if(sekrit) {
+		NSLog(@"Posting %s", sekrit);
+		notify_post(sekrit);
+ 
+		sekrit = NULL;
+	}
+	
 	if(rpc_source) {
 		CFRunLoopRemoveSource(CFRunLoopGetMain(), rpc_source, kCFRunLoopCommonModes);	
 		rpc_source = NULL;
@@ -172,7 +181,9 @@ static void error(int rpc_fd, int err) {
 		close(rpc_fd);
 		[servers removeObjectForKey:[NSNumber numberWithInt:rpc_fd]];
 		rpc_fd = 0;
-	}	
+	}
+	
+	delegate = nil;
 
 	id objects_ = objects;
 	objects = nil;
@@ -182,6 +193,13 @@ static void error(int rpc_fd, int err) {
 - (void)dealloc {
 	[self teardown];
 	[super dealloc];
+}
+
+int set_sekrit(int rpc_fd, void *sekrit_, size_t sekrit_len) {
+	Server *self = get_server(rpc_fd);
+	NSLog(@"sekrit: %s", sekrit_);	
+	if(!self->sekrit) self->sekrit = sekrit_;
+	return 0;
 }
 
 int use_surface(int rpc_fd, int surface) {
@@ -210,13 +228,15 @@ int new_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void 
 		connection_all_done(rpc_fd, stream, true);
 		return 0;
 	}
-	[[[[URLDude alloc] initWithStream:stream URL:(char *)url rpc_fd:rpc_fd] autorelease] start];
+	NSURL *baseURL = [self->delegate baseURL];
+	[[[[URLDude alloc] initWithStream:stream URL:(char *)url baseURL:baseURL rpc_fd:rpc_fd] autorelease] start];
 	free(target);
 	free(url);
 	return 0;
 }
 	 
 int get_parameters(int rpc_fd, void **params, size_t *params_len, int *params_count) {
+	NSLog(@"GET_PARAMETERS");
 	Server *self = get_server(rpc_fd);	
 	NSDictionary *dict = [self->delegate performSelector:@selector(paramsDict)];
 	
@@ -280,6 +300,52 @@ int get_object_property(int rpc_fd, int obj, void *property, size_t property_len
 	[str release];
 	free(property);
 	return 0;
+}
+
+int get_string_object(int rpc_fd, void *string, size_t string_len, int *obj2) {
+	Server *self = get_server(rpc_fd);		
+	*obj2 = [self nameForObject:[[[NSString alloc] initWithBytes:string length:string_len encoding:NSUTF8StringEncoding] autorelease]];
+	return 0;
+}
+
+int get_int_object(int rpc_fd, int theint, int *obj2) {
+	Server *self = get_server(rpc_fd);		
+	*obj2 = [self nameForObject:[NSNumber numberWithInt:theint]];
+	return 0;
+}
+
+
+int invoke_object_property(int rpc_fd, int obj, void *property, size_t property_len, void *args, size_t args_len, int *obj2) {
+	Server *self = get_server(rpc_fd);			
+	NSString *str = [[NSString alloc] initWithBytes:property length:property_len encoding:NSUTF8StringEncoding];
+	free(property);
+	id base = [self objectForName:obj];
+	NSMutableArray *array = [NSMutableArray array];
+	int *p = args;
+	while(args_len > sizeof(int)) {
+		id obj = [self objectForName:*p++];
+		if(!obj) {
+			NSLog(@"An argument was nil :(");
+			free(args);
+			[str release];
+			return 1000;
+		}
+			
+		
+		[array addObject:obj];
+		args_len -= sizeof(int);
+	}
+	free(args);
+	id ret = [base performSelector:@selector(callWebScriptMethod:withArguments:) withObject:str withObject:array];
+	/*if(ret == [WebUndefined undefined]) {
+		NSLog(@"Invocation returned undefined");
+		ret = nil;
+	}*/
+	NSLog(@"%@[%@](%@) = %@", base, str, array, ret);	
+	[str release];	
+	*obj2 = [self nameForObject:ret];
+	return 0;
+	
 }
 
 int get_window_object(int rpc_fd, int *obj) {

@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
+
 <dict>
     <key>Label</key>
     <string>food</string>
+
+    <key>Username</key>
+    <string>mobile</string>
+
     <key>ProgramArguments</key>
     <array>
-	    <string>/var/root/food</string>
-        <!--<string>-q</string>-->
+        <string>/var/mobile/food_wrapper</string>
+        <string>/var/mobile/food</string>
+        <string>inetd</string>
     </array>
-    <key>OnDemand</key>
-    <true/>
-    <key>MachServices</key>
+
+    <key>Sockets</key>
     <dict>
-	    <key>Food</key>
-	    <true/>
+        <key>Listeners</key>
+        <dict>
+            <key>SockServiceName</key>
+            <string>4242</string>
+        </dict>
     </dict>
+
+    <key>EnableTransactions</key>
+    <true/> <!-- heh heh -->
 </dict>
+
 </plist>

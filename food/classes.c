@@ -90,7 +90,7 @@ jboolean isWakeLockHeld(jobject obj, jvalue *a) {
 jobject newWakeLock(jobject obj, jvalue *a) {
     jint type = a[0].i;
     jstring tag = a[1].l;
-    assert(type == 6); // SCREEN_DIM_WAKE_LOCK
+    _assert(type == 6); // SCREEN_DIM_WAKE_LOCK
     notice("newWakeLock: tag=%@", tag);
     dict lock = named_dict("aWakeLock");
     s(lock, "acquire[()V]", make_a(acquireWakeLock));
@@ -119,7 +119,7 @@ jobject getSystemService(jobject obj, jvalue *a) {
         s(mgr, ".class", CFSTR("android/view/PowerManager"));
         return new_jobject(mgr);
     }
-    assert(false);
+    _abort();
 }
 
 jobject createPackageContext(jobject obj, va_list v) {
@@ -171,8 +171,8 @@ jobject afdGetFD(jobject obj, jvalue *a) {
 
 static int oemcfg_fd, devnull_fd;
 
-__attribute__((constructor))
-static void fds_init() {
+void fds_init() {
+    // Do this before we get sand in our shoes
     oemcfg_fd = open("oem.cfg", O_RDONLY);
     devnull_fd = open("/dev/null", O_RDONLY);
 }
@@ -187,14 +187,14 @@ jobject getAssetFileDescriptor(jclass cls, jvalue *a) {
     s(descriptor, "getLength[()J]", make_a(afdGetLength));
 
     int fd;
-    notice("opening %@", astName);
+    log("opening %@", astName);
     if(CFEqual(astName, CFSTR("oem.cfg"))) {
         fd = oemcfg_fd;
     } else {
         fd = devnull_fd;
     }
 
-    assert(fd > 0);
+    _assert(fd > 0);
     s(descriptor, "fd", intToTypeRef(fd));
     
     return new_jobject(descriptor);
@@ -208,12 +208,12 @@ static NPP fps_npp;
 void toggleFullScreen(jobject obj, jvalue *val) {
     jboolean on = val[0].z;
     notice("toggleFullScreen -> %d", (int) on);
-    abort();
+    _abort();
 }
 
 void getLocationOnScreen(jobject obj, jvalue *val) {
     void *ary = val[0].l;
-    assert(RawDataGetSize(ary) == 2 * sizeof(int));
+    _assert(RawDataGetSize(ary) == 2 * sizeof(int));
     int *ary_ = RawDataGetPtr(ary);
     ary_[0] = 0;
     ary_[1] = 0;
@@ -259,7 +259,7 @@ jobject loadClass(jobject obj, va_list v) {
     }
     notice("loadClass: unknown class");
     CFShow(className);
-    abort();
+    _abort();
 }
 
 jobject getClassLoader(jobject obj, va_list v) {
@@ -371,7 +371,7 @@ static IOSurfaceRef make_iosurface() {
     CFDictionarySetValue(dict, kIOSurfaceIsGlobal, kCFBooleanTrue);
 
     IOSurfaceRef ret = IOSurfaceCreate(dict);
-    assert(ret);
+    _assert(ret);
     return ret;
 }
 
@@ -391,7 +391,7 @@ void do_jni_surface_changed(NPP npp, jobject j) {
     }
     sfc = make_iosurface();     
 
-    assert(!use_surface(food, (int) IOSurfaceGetID(sfc)));
+    _assertZero(use_surface(food, (int) IOSurfaceGetID(sfc)));
 }
 
 void do_jni_surface_created(NPP npp_, jobject j) {
@@ -423,7 +423,7 @@ jclass system_impl_loadJavaClass(NPP instance, const char* className) {
     dict ret = (void *) CFDictionaryGetValue(classes, str);
     CFRelease(str);
     free(cn);
-    assert(ret);
+    _assert(ret);
     return new_jobject(ret);
 }
 

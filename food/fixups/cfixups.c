@@ -35,21 +35,21 @@ int32_t __atomic_dec(volatile int32_t* addr) {
 NPPluginFuncs*/
 
 int prctl(int option, unsigned long arg2, unsigned long arg3 , unsigned long arg4, unsigned long arg5) {
-    //printf("prctl called: option=%x\n", option);
+    //fprintf(stderr, "prctl called: option=%x\n", option);
     switch(option) {
     case 15: {
         char buf[16];
         strncpy(buf, (void *) arg2, 16);
-        //printf("PR_SET_NAME %s\n", buf);
+        //fprintf(stderr, "PR_SET_NAME %s\n", buf);
         return 0; }
     default:
-        printf("Unknown prctl option %d!\n", option);
+        fprintf(stderr, "Unknown prctl option %d!\n", option);
     };
     return -1;
 }
 
 int cacheflush(char *start, char *end, int flags) {
-    printf("cacheflush %p %p %d\n", start, end, flags);
+    fprintf(stderr, "cacheflush %p %p %d\n", start, end, flags);
     sys_dcache_flush(start, (size_t) (end - start));
     sys_icache_invalidate(start, (size_t) (end - start));
     return 0;
@@ -184,34 +184,33 @@ const char *_ctype_ = _C_ctype_;
 void *rmmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
     // Linux and OSX use different values for MAP_ANON(YMOUS)
     if(flags & 0x1000) {
-        printf("MAP_EXECUTAbLE\n");
+        fprintf(stderr, "MAP_EXECUTAbLE\n");
         flags &= ~0x1000;
     }
     if(flags & 0x20) {
-        printf("MAP_RENAME\n");
+        fprintf(stderr, "MAP_RENAME\n");
         flags &= ~0x20;
         flags |= MAP_ANON;
     }
     void *ret = mmap(addr, len, prot, flags, fd, offset);
-    printf("addr:%p len:%d prot:%d flags:%x fd:%d offset:%x\n", addr, (int) len, prot, flags, fd, (int) offset);
-    printf("mmap ret: %p\n", ret);
+    fprintf(stderr, "addr:%p len:%d prot:%d flags:%x fd:%d offset:%x\n", addr, (int) len, prot, flags, fd, (int) offset);
+    fprintf(stderr, "mmap ret: %p\n", ret);
     return ret;
 }
 
 int rmprotect(void *addr, size_t len, int prot) {
-    printf("mprotect %p (%d): %x\n", addr, (int) len, prot);
-    assert(!mprotect(addr, len, prot));
-    return 0;
+    fprintf(stderr, "mprotect %p (%d): %x\n", addr, (int) len, prot);
+    return mprotect(addr, len, prot);
 }
 
 long rsysconf(int name) {
-    printf("rsysconf: %d\n", name);
+    fprintf(stderr, "rsysconf: %d\n", name);
     switch(name) {
     case 0x27:
         return getpagesize();
         break;
     default:
-        printf("Unknown!\n");
+        fprintf(stderr, "Unknown!\n");
         abort();
     }
 }

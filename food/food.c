@@ -33,14 +33,14 @@ void xread(int fd, void *buf, size_t nbyte) {
     errno = 0;
     int ret = read(fd, buf, nbyte);
     if(errno) perror("xread");
-    assert(ret == nbyte);
+    _assert(ret == nbyte);
 }
 
 static void add(char *fp) {
     void *handle = dlopen(fp, RTLD_NOW);
     if(!handle) {
         perror(fp);
-        abort();
+        _abort();
     }
 }
 
@@ -56,7 +56,7 @@ void *stubify(void *addy, const char *id, bool needs_mprotect) {
     if(needs_mprotect) {
         // Multithreading sucks.
         base = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-        assert(base != MAP_FAILED);
+        _assert(base != MAP_FAILED);
     } else {
         base = stubs;
     }
@@ -77,7 +77,7 @@ void *stubify(void *addy, const char *id, bool needs_mprotect) {
         *base++ = 0xe8bdb005;
         *base++ = 0x000083f0;
 
-        *base++ = (uint32_t) printf;
+        *base++ = (uint32_t) abort;
         *base++ = (uint32_t) dstr;
         *base++ = p;
     } else { 
@@ -93,7 +93,7 @@ void *stubify(void *addy, const char *id, bool needs_mprotect) {
     }
     
     if(needs_mprotect) {
-        assert(!mprotect(ret, getpagesize(), PROT_READ | PROT_EXEC));
+        _assertZero(mprotect(ret, getpagesize(), PROT_READ | PROT_EXEC));
     } else {
         stubs = base;
     }
@@ -127,25 +127,27 @@ static void *getsym(char *id) {
 }
 
 void logpatched(int x, const char *format, ...) {
-    printf("(logpatched %d) ", x);
+    fprintf(stderr, "(logpatched %d) ", x);
     va_list v;
     va_start(v, format);
-    vprintf(format, v);
+    vfprintf(stderr, format, v);
     va_end(v);
 }
 
 static void do_patches() {
- /*   *((uint32_t *) 0x0213dfd4) = 0x46c04778;
+    *((uint32_t *) 0x0213dfd4) = 0x46c04778;
     *((uint32_t *) 0x0213dfd8) = 0xe51ff004;
-    *((void **)    0x0213dfdc) = stubify(logpatched, "logpatched", false);*/
+    *((void **)    0x0213dfdc) = stubify(logpatched, "logpatched", false);
 }
 
+extern void fds_init();
 extern void go(void *NP_Initialize_ptr, void *JNI_OnLoad_ptr);
     
 extern void GSFontInitialize();
 
 int main(int argc, char **argv) {
     chdir(dirname(argv[0]));
+    setvbuf(stdout, NULL, _IONBF, 0);
 
     char *rpcname = NULL;
    
@@ -156,12 +158,12 @@ int main(int argc, char **argv) {
             fclose(stdout);
             fclose(stderr);
         } else {
-            assert(p[0] != '-');
+            _assert(p[0] != '-');
             rpcname = p;
         }
     }
 
-    assert(rpcname);
+    _assert(rpcname);
 
     GSFontInitialize(); // magic sauce; if this is not called, CTFontCreate* crashes
 
@@ -190,7 +192,9 @@ int main(int argc, char **argv) {
 
 
     int fd = open("libflashplayer.so", O_RDONLY);
-    assert(fd > 0);
+    _assert(fd > 0);
+
+    fds_init();
 
     sandbox_me();
 
@@ -198,10 +202,10 @@ int main(int argc, char **argv) {
     Elf32_Ehdr ehdr;
     xread(fd, &ehdr, sizeof(ehdr));
 
-    assert(ehdr.e_type == ET_DYN);
-    assert(ehdr.e_machine == EM_ARM);
+    _assert(ehdr.e_type == ET_DYN);
+    _assert(ehdr.e_machine == EM_ARM);
 
-    assert(ehdr.e_phentsize >= sizeof(Elf32_Phdr));
+    _assert(ehdr.e_phentsize >= sizeof(Elf32_Phdr));
 
     size_t sz = 0;
 
@@ -219,7 +223,7 @@ int main(int argc, char **argv) {
 
     reloc_base = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
     reloc_size = sz;
-    assert(reloc_base != MAP_FAILED);
+    _assert(reloc_base != MAP_FAILED);
 
     notice("--> reloc_base = %p", reloc_base);
 
@@ -231,25 +235,25 @@ int main(int argc, char **argv) {
         xread(fd, ph, ehdr.e_phentsize);
         notice("type:%x offset:%x vaddr:%x filesz:%x memsz:%x end:%x align:%x", (int)ph->p_type, ph->p_offset, ph->p_vaddr, ph->p_filesz, ph->p_memsz, ph->p_vaddr + ph->p_memsz, ph->p_align);
         // Cheat
-        assert(ph->p_filesz <= ph->p_memsz);
+        _assert(ph->p_filesz <= ph->p_memsz);
         if(ph->p_filesz > 0) {
             ssize_t br = pread(fd, v2v(ph->p_vaddr), ph->p_filesz, ph->p_offset);
-            assert(ph->p_filesz == br);
+            _assert(ph->p_filesz == br);
             /**** WTF.
              * If I use mmap for those cases, pread acts very mysteriously.
              * It hangs, but if I ctrl-c and cont in gdb, it then fails.
              * I don't think it ought to?
             if(ph->p_align != 0x1000) {
             } else {
-                assert((ph->p_vaddr & 0xfff) == (ph->p_offset & 0xfff));
+                _assert((ph->p_vaddr & 0xfff) == (ph->p_offset & 0xfff));
                 void *ret = mmap(v2v(ph->p_vaddr & ~0xfff), ph->p_filesz, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FIXED, fd, ph->p_offset & ~0xfff);
-                assert(ret != MAP_FAILED);
+                _assert(ret != MAP_FAILED);
             } */
         }
         free(ph);
     }
 
-    assert(ehdr.e_shentsize >= sizeof(Elf32_Shdr));
+    _assert(ehdr.e_shentsize >= sizeof(Elf32_Shdr));
     Elf32_Sym *symtab = NULL;
     Elf32_Word symtab_size;
     char *strtab = NULL;
@@ -273,9 +277,9 @@ int main(int argc, char **argv) {
         free(sh);
     }
 
-    assert(symtab);
-    assert(strtab);
-    assert(shstrtab);
+    _assert(symtab);
+    _assert(strtab);
+    _assert(shstrtab);
 
     void **init_array = NULL;
     Elf32_Word init_array_size;
@@ -285,7 +289,7 @@ int main(int argc, char **argv) {
     while(shnum--) {
         Elf32_Shdr *sh = (Elf32_Shdr *) malloc(ehdr.e_shentsize);
         xread(fd, sh, ehdr.e_shentsize);
-        assert(sh->sh_type != SHT_RELA);
+        _assert(sh->sh_type != SHT_RELA);
         char buf[12];
         pread(fd, buf, 12, shstrtab + sh->sh_name);
         if(!memcmp(buf, ".init_array", 12)) {
@@ -335,16 +339,16 @@ int main(int argc, char **argv) {
             int size = ph->p_memsz;
             char *addr = v2v(ph->p_vaddr);
             uint32_t diff = ((uint32_t)addr & 0xfff);
-            assert(!mprotect(addr - diff, size + diff, prot));
+            _assertZero(mprotect(addr - diff, size + diff, prot));
         }
         free(ph);
     }
 
     // Stubs away
-    assert(!mprotect(stubs_base, STUBS_SIZE, PROT_READ | PROT_EXEC));
+    _assertZero(mprotect(stubs_base, STUBS_SIZE, PROT_READ | PROT_EXEC));
 
     // Call the init funcs
-    assert(init_array);
+    _assert(init_array);
     while(init_array_size >= 4) {
         void (*x)() = *init_array++;
         notice("Calling %p", x);

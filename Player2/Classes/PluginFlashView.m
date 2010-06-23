@@ -20,20 +20,37 @@
 
 @implementation PluginFlashView
 
+- (void)setSizeIfNecessary {
+	NSLog(@"setSizeIfNecessary: I am %@", self);
+	CGSize size = [self movieSize];
+	if(size.width && size.height && rpcfd)
+		set_movie_size(rpcfd, size.width, size.height);	
+}	
+
 - (void)makeServer {
 	[self.server teardown];
 	self.server = [[[Server alloc] initWithDelegate:self] autorelease];
 	rpcfd = self.server.rpc_fd;	
+	[self setSizeIfNecessary];
 }
+
 
 - (id)initWithArguments:(NSDictionary *)arguments_ {
 	if(self = [super init]) {
 		arguments = [arguments_ retain];
+		//self.contentMode = UIViewContentModeRedraw;		
 		self.backgroundColor = [UIColor grayColor];
 		NSLog(@"Making server...");
 		[self makeServer];
 	}
 	return self;	   
+}
+
+- (void)setFrame:(CGRect)frame {
+	[super setFrame:frame];
+	NSLog(@"Frame changed");
+	[self setSizeIfNecessary];
+	label.frame = self.bounds;	
 }
 
 + (UIView *)plugInViewWithArguments:(NSDictionary *)arguments
@@ -44,10 +61,14 @@
 	//NSDictionary *pluginDict = [newArguments objectForKey:@"WebPlugInAttributesKey"];	
 	//NSString *flashURL = [pluginDict objectForKey:@"src"];
 	
-    return [[[PluginFlashView alloc] initWithArguments:arguments] autorelease];
+	id x = [[[PluginFlashView alloc] initWithArguments:arguments] autorelease];
+	NSLog(@"It is %@", x);
+    return x;
 }
 
-
+- (NSURL *)baseURL {
+	return [arguments objectForKey:@"WebPlugInBaseURLKey"]/*[NSURL URLWithString:]*/;
+}
 
 - (id)getWindowObject {
 	return [[[arguments objectForKey:@"WebPlugInContainerKey"] webFrame] windowObject];
@@ -94,14 +115,15 @@
 
 - (void)diedWithError:(NSString *)error {
 	NSLog(@"Error: %@", error);
-	
+	if(label) { [label removeFromSuperview]; [label release]; }
 	label = [[UILabel alloc] init];
-	label.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.3]; // dim the image
+	label.backgroundColor = [UIColor colorWithWhite:0.5 alpha:0.3]; // dim the image
 	label.text = error;		
 	label.frame = self.bounds;
 	label.textAlignment = UITextAlignmentCenter;
-	label.shadowColor = [UIColor blackColor];
-	label.shadowOffset = CGSizeMake(0, 1);
+	label.textColor = [UIColor whiteColor];
+	//label.shadowColor = [UIColor whiteColor];
+	//label.shadowOffset = CGSizeMake(0, 1);
 	[self addSubview:label];
 }
 
@@ -109,6 +131,7 @@
 - (void)dealloc {
 	[arguments release];
 	[label release];
+	[self.server teardown];
 	if(oldContents) CGImageRelease(oldContents);	
     [super dealloc];
 }
@@ -129,10 +152,12 @@
 
 #define foo(func, num) \
 - (void)func:(NSSet *)touches withEvent:(UIEvent *)event { \
-for(UITouch *t in touches) { \
-CGPoint location = [t locationInView:self]; \
-touch(rpcfd, num, location.x, location.y); \
-} \
+	if(rpcfd) {\
+		for(UITouch *t in touches) {\
+			CGPoint location = [t locationInView:self]; \
+			touch(rpcfd, num, location.x, location.y); \
+		} \
+	}\
 } 
 
 foo(touchesBegan, kDown_ANPTouchAction)

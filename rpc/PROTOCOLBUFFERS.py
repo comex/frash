@@ -16,7 +16,6 @@ for hfile in hfiles:
     print '#include <stdlib.h>'
     print
     print 'void rpcserve(int rpcfd, void (*error)(int, int));'
-    print 'int rpcserve_once(int rpcfd, bool nonblock);'
     print
 
 for i in xrange(2):
@@ -41,9 +40,10 @@ struct hdr {
 
 static int msgids;
 static CFMutableDictionaryRef rpc_states;
+static bool rpcserve_alive;
+static pthread_mutex_t rpc_states_mutex = PTHREAD_MUTEX_INITIALIZER;
 static CFMutableArrayRef pending_sends;
 // Unnecessary?
-static pthread_mutex_t ps_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t send_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t send_cond = PTHREAD_COND_INITIALIZER;
 static pthread_once_t send_once = PTHREAD_ONCE_INIT;
@@ -60,14 +60,12 @@ static void *xsend_thread(void *blah) {
     while(1) {
         struct hdr *hdr;
         while(1) {
-            pthread_mutex_lock(&ps_mutex);
             if(!CFArrayGetCount(pending_sends)) {
-                pthread_mutex_unlock(&ps_mutex);
                 break;
             }
             hdr = (void *) CFArrayGetValueAtIndex(pending_sends, 0);
             CFArrayRemoveValueAtIndex(pending_sends, 0);
-            pthread_mutex_unlock(&ps_mutex);
+            pthread_mutex_unlock(&send_mutex);
             int fd = hdr->magic;
             hdr->magic = 0x12345678;
             const char *p = (void *) hdr;
@@ -84,6 +82,7 @@ static void *xsend_thread(void *blah) {
                 p += bs;
             }
             free(hdr);
+            pthread_mutex_lock(&send_mutex);
         }
         pthread_cond_wait(&send_cond, &send_mutex);
     }
@@ -99,10 +98,8 @@ static void xsend_startup() {
 
 static int xsend(void *buf) {
     pthread_once(&send_once, xsend_startup);
-    pthread_mutex_lock(&ps_mutex);
-    CFArrayAppendValue(pending_sends, buf);
-    pthread_mutex_unlock(&ps_mutex);
     pthread_mutex_lock(&send_mutex);
+    CFArrayAppendValue(pending_sends, buf);
     pthread_cond_signal(&send_cond);
     pthread_mutex_unlock(&send_mutex);
     return 0;
@@ -231,14 +228,22 @@ for line in open(sys.argv[1]):
             print '\textrap += %s_len;' % argname
     print '\tsignal(SIGPIPE, SIG_IGN);'
     print '\tssize_t bs;' 
+    print '\tpthread_mutex_lock(&rpc_states_mutex);'
     if sync:
+        print '\tif(!rpcserve_alive) {'
+        print '\t\tpthread_mutex_unlock(&rpc_states_mutex);'
+        print '\t\tfree(req);'
+        print '\t\treturn 2;'
+        print '\t}'
+
         print '\tstruct { pthread_cond_t cond; pthread_mutex_t mut; int src_fd; struct %s_resp *msg; } s;' % funcname
         print '\tpthread_mutex_init(&s.mut, NULL);'
         print '\tpthread_cond_init(&s.cond, NULL);'
         print '\ts.msg = NULL;'
         print '\ts.src_fd = rpcfd;'
-        print '\tfprintf(stderr, "-> %d\\n", req->msgid);'
+        #print '\tfprintf(stderr, "-> %d\\n", req->msgid);'
         print '\tCFDictionarySetValue(rpc_states, (void *) req->msgid, (void *) &s);'
+    print '\tpthread_mutex_unlock(&rpc_states_mutex);'
     print '\tif(xsend(req)) { return 1; };'
     if sync:
         print '\tpthread_mutex_lock(&s.mut);'
@@ -347,7 +352,7 @@ for i in xrange(2):
     server = server_files[i].getvalue()
     print '''
 
-int rpcserve_thread_(int rpcfd);
+int rpcserve_thread_(int, CFRunLoopSourceRef, pthread_mutex_t *, CFMutableArrayRef);
 
 static void rpc_applier(const void *key, const void *value, void *context) {
     struct hdr *fake_resp = malloc(sizeof(struct hdr));
@@ -369,21 +374,29 @@ struct rpcserve_info {
 
 
 struct rpcctx_info {
+    pthread_mutex_t mut;
+    CFMutableArrayRef messages;
     int rpcfd;
-    CFRunLoopSourceRef src;
-    struct hdr *msg;
 };
 
 void rpcctx_perform(void *info_) {
     struct rpcctx_info *info = info_;
-    CFRunLoopSourceInvalidate(info->src);
     int rpcfd = info->rpcfd;
-    struct hdr *msg_ = info->msg;
-    free(info);
-    switch(msg_->funcid_or_status) {
-        SERVER
+    while(1) {
+        pthread_mutex_lock(&info->mut);
+        if(!CFArrayGetCount(info->messages)) {
+            pthread_mutex_unlock(&info->mut);
+            break;
+        }
+        
+        struct hdr *msg_ = (void *) CFArrayGetValueAtIndex(info->messages, 0);
+        CFArrayRemoveValueAtIndex(info->messages, 0);
+        pthread_mutex_unlock(&info->mut);
+        switch(msg_->funcid_or_status) {
+            SERVER
+        }
+        free(msg_);
     }
-    free(msg_);
 }
 
 struct rpcerrctx_info {
@@ -396,30 +409,61 @@ struct rpcerrctx_info {
 void rpcerrctx_perform(void *info_) {
     struct rpcerrctx_info *info = info_;
     CFRunLoopSourceInvalidate(info->src);
+    CFRelease(info->src);
     info->error(info->rpcfd, info->ret);
+    free(info);
 }
 
 void *rpcserve_thread(void *info_) {
     struct rpcserve_info *info = info_;
-    int ret = rpcserve_thread_(info->rpcfd);
+    pthread_mutex_lock(&rpc_states_mutex);
+    rpcserve_alive = true;
+    pthread_mutex_unlock(&rpc_states_mutex);
+
+
+    CFRunLoopSourceContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    struct rpcctx_info *rpcinfo = malloc(sizeof(*rpcinfo));
+    ctx.info = rpcinfo;
+    ctx.perform = rpcctx_perform;
+
+    pthread_mutex_init(&rpcinfo->mut, NULL);
+    rpcinfo->rpcfd = info->rpcfd;
+    rpcinfo->messages = CFArrayCreateMutable(NULL, 0, NULL);
+
+    CFRunLoopSourceRef asrc = CFRunLoopSourceCreate(NULL, 0, &ctx);
+    CFRunLoopAddSource(CFRunLoopGetMain(), asrc, kCFRunLoopCommonModes);
+
+
+    int ret = rpcserve_thread_(info->rpcfd, asrc, &rpcinfo->mut, rpcinfo->messages);
+    
+    
+    CFRunLoopSourceInvalidate(asrc);
+    CFRelease(asrc);
+
     // Mark failure
+    pthread_mutex_lock(&rpc_states_mutex);
+    rpcserve_alive = false;
+    pthread_mutex_unlock(&rpc_states_mutex);
     CFDictionaryApplyFunction(rpc_states, rpc_applier, NULL);
     if(info->error) {
         CFRunLoopSourceContext ctx;
         memset(&ctx, 0, sizeof(ctx));
-        struct rpcerrctx_info *info_ = malloc(sizeof(*info));
-        ctx.info = info;
+        struct rpcerrctx_info *errinfo = malloc(sizeof(*errinfo));
+        ctx.info = errinfo;
         ctx.perform = rpcerrctx_perform;
         CFRunLoopSourceRef src = CFRunLoopSourceCreate(NULL, 0, &ctx);
-        info_->src = src;
-        info_->rpcfd = info->rpcfd;
-        info_->ret = ret;
-        info_->error = info->error;
-        CFRunLoopSourceSignal(src);
+        errinfo->src = src;
+        errinfo->rpcfd = info->rpcfd;
+        errinfo->ret = ret;
+        errinfo->error = info->error;
         CFRunLoopAddSource(CFRunLoopGetMain(), src, kCFRunLoopCommonModes);
+        CFRunLoopSourceSignal(src);
         CFRunLoopWakeUp(CFRunLoopGetMain());
-        CFRelease(src);
     }
+    pthread_mutex_destroy(&rpcinfo->mut);
+    CFRelease(rpcinfo->messages);
+    free(rpcinfo);
     free(info);
     return NULL;
 }
@@ -432,7 +476,7 @@ void rpcserve(int rpcfd, void (*error)(int, int)) {
     pthread_create(&thread, NULL, rpcserve_thread, info);
 }
 
-int rpcserve_thread_(int rpcfd) {
+int rpcserve_thread_(int rpcfd, CFRunLoopSourceRef src, pthread_mutex_t *mut, CFMutableArrayRef array) {
     while(1) {
         struct hdr hdr;
         if(recv(rpcfd, &hdr, sizeof(hdr), MSG_WAITALL) != sizeof(hdr)) {
@@ -452,10 +496,12 @@ int rpcserve_thread_(int rpcfd) {
         memcpy(msg_, &hdr, sizeof(hdr));
         if(recv(rpcfd, msg_->extra, hdr.msgsize - sizeof(*msg_), MSG_WAITALL) != hdr.msgsize - sizeof(*msg_)) return -errno;
         if(hdr.is_resp) {
+            pthread_mutex_lock(&rpc_states_mutex);
             struct { pthread_cond_t cond; pthread_mutex_t mut; int src_fd; void *msg; } *s = \\
             (void *) CFDictionaryGetValue(rpc_states, (void *) hdr.msgid);
             CFDictionaryRemoveValue(rpc_states, (void *) hdr.msgid);
-            fprintf(stderr, "got a response for msgid %d (%p)\\n", hdr.msgid, s);
+            pthread_mutex_unlock(&rpc_states_mutex);
+            //fprintf(stderr, "got a response for msgid %d (%p)\\n", hdr.msgid, s);
             if(s && s->src_fd == rpcfd) {
                 s->msg = msg_;
                 pthread_mutex_lock(&s->mut);
@@ -467,19 +513,11 @@ int rpcserve_thread_(int rpcfd) {
             continue;
         }
         // This part (only) should add something to a run loop
-        CFRunLoopSourceContext ctx;
-        memset(&ctx, 0, sizeof(ctx));
-        struct rpcctx_info *info = malloc(sizeof(*info));
-        ctx.info = info;
-        ctx.perform = rpcctx_perform;
-        CFRunLoopSourceRef src = CFRunLoopSourceCreate(NULL, 0, &ctx);
-        info->src = src;
-        info->rpcfd = rpcfd;
-        info->msg = msg_;
+        pthread_mutex_lock(mut);
+        CFArrayAppendValue(array, msg_);
+        pthread_mutex_unlock(mut);
         CFRunLoopSourceSignal(src);
-        CFRunLoopAddSource(CFRunLoopGetMain(), src, kCFRunLoopCommonModes);
         CFRunLoopWakeUp(CFRunLoopGetMain());
-        CFRelease(src);
     }
 }
 

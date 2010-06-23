@@ -35,7 +35,7 @@ int       rthread_mutexattr_destroy(rthread_mutexattr_t *attr) {
 }
 int       rthread_mutex_init(rthread_mutex_t *m, const rthread_mutexattr_t *ma) {
     *m = calloc(1, sizeof(pthread_mutex_t));
-    //printf("rthread_mutex_init %p with attributes %p\n", m, ma);
+    //fprintf(stderr, "rthread_mutex_init %p with attributes %p\n", m, ma);
     return pthread_mutex_init(*m, ma == NULL ? NULL : *ma);
 }
 int       rthread_create(rthread_t *a,
@@ -62,7 +62,7 @@ int       rthread_attr_setstacksize(rthread_attr_t *a, size_t b) {
     return pthread_attr_setstacksize(*a, b);
 }
 int rthread_getattr_np(rthread_t thread, rthread_attr_t *attr) {
-    printf("rthread_getattr_np called...\n");
+    fprintf(stderr, "rthread_getattr_np called...\n");
     rthread_attr_setstackaddr(attr, pthread_get_stackaddr_np(*thread));
     rthread_attr_setstacksize(attr, pthread_get_stacksize_np(*thread));
     return 0;
@@ -86,15 +86,15 @@ int       rthread_cond_init(rthread_cond_t *a,
     return pthread_cond_init(*a, b == NULL ? NULL : *b);
 }
 int       rthread_mutex_lock(rthread_mutex_t *a) {
-    //printf("lock %p\n", a);
+    //fprintf(stderr, "lock %p\n", a);
     return pthread_mutex_lock(*a);
 }
 int       rthread_mutex_unlock(rthread_mutex_t *a) {
-    //printf("unlock %p\n", a);
+    //fprintf(stderr, "unlock %p\n", a);
     return pthread_mutex_unlock(*a);
 }
 int       rthread_mutex_trylock(rthread_mutex_t *a) {
-    //printf("trylock %p\n", a);
+    //fprintf(stderr, "trylock %p\n", a);
     return pthread_mutex_trylock(*a);
 }
 int       rthread_attr_setdetachstate(rthread_attr_t *a,
@@ -111,7 +111,7 @@ int       rthread_cond_wait(rthread_cond_t *a,
 int       rthread_cond_timedwait(rthread_cond_t *a,
 				 rthread_mutex_t *b,
 				 const struct timespec *c) {
-    printf("timedwait: timespec=%u,%u\n", (unsigned int) c->tv_sec, (unsigned int) c->tv_nsec);
+    fprintf(stderr, "timedwait: timespec=%u,%u\n", (unsigned int) c->tv_sec, (unsigned int) c->tv_nsec);
     return pthread_cond_timedwait(*a, *b, c);
 }
 int       rthread_mutexattr_settype(rthread_mutexattr_t *a, int b) {

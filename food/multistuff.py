@@ -43,7 +43,7 @@ for jname, cfname in things.items():
     if cfname is not None:
         s += ('''j%s typeRefTo%s(CFTypeRef val) {
     j%s ret;
-    assert(CFNumberGetValue((CFNumberRef) val, %s, &ret));
+    _assert(CFNumberGetValue((CFNumberRef) val, %s, &ret));
     return ret;
 }
 ''' % (jname, jname.capitalize(), jname, cfname))
@@ -64,10 +64,10 @@ for jname, cfname in things.items():
 
     s += ('''j%s impl_Call%sMethodA(JNIEnv *env, jobject obj, jmethodID methodID, const jvalue *args) {
     const void *meth = CFDictionaryGetValue(obj, (CFStringRef) methodID);
-    if(!meth) { log("Unknown method (A): %%@", methodID); abort(); }
+    if(!meth) { log("Unknown method (A): %%@", methodID); _abort(); }
     struct method_%s *st;
-    assert(st = RawDataGetPtr(meth));
-    if(!st->a) { log("No A impl: %%@", methodID); abort(); }
+    _assert(st = RawDataGetPtr(meth));
+    if(!st->a) { log("No A impl: %%@", methodID); _abort(); }
     return st->a(obj, args);
 }
 ''' % (jname, jname.capitalize(), jname))
@@ -78,10 +78,10 @@ for jname, cfname in things.items():
 
     s += ('''j%s impl_Call%sMethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list args) {
     const void *meth = CFDictionaryGetValue(obj, (CFStringRef) methodID);
-    if(!meth) { log("Unknown method (V): %%@", methodID); abort(); }
+    if(!meth) { log("Unknown method (V): %%@", methodID); _abort(); }
     struct method_%s *st;
-    assert(st = RawDataGetPtr(meth));
-    if(!st->v) { log("No V impl: %%@", methodID); abort(); }
+    _assert(st = RawDataGetPtr(meth));
+    if(!st->v) { log("No V impl: %%@", methodID); _abort(); }
     return st->v(obj, args);
 }
 ''' % (jname, jname.capitalize(), jname))
@@ -114,7 +114,7 @@ for jname, cfname in things.items():
     
     s += ('''j%s impl_Get%sField(JNIEnv *env, jobject obj, jfieldID fieldID) {
         CFTypeRef ref = CFDictionaryGetValue(obj, (CFStringRef) fieldID);
-        if(!ref) { log("Unknown property: %%@", fieldID); abort(); }
+        if(!ref) { log("Unknown property: %%@", fieldID); _abort(); }
         return typeRefTo%s(ref);
 }
 ''' % (jname, jname.capitalize(), jname.capitalize()))
@@ -130,19 +130,19 @@ struct method_void { void (*v)(jobject, va_list); void (*a)(jobject, const     j
 void impl_CallVoidMethodA(JNIEnv *env, jobject obj, jmethodID methodID, const    jvalue *args) {
     const void *meth = CFDictionaryGetValue(obj, (CFStringRef)          
 methodID);
-    if(!meth) { log("Unknown method (A): %%@", methodID); abort(); }
+    if(!meth) { log("Unknown method (A): %%@", methodID); _abort(); }
     struct method_void *st; 
-    assert(st = RawDataGetPtr(meth));
-    if(!st->a) { log("No A impl: %%@", methodID); abort(); }
+    _assert(st = RawDataGetPtr(meth));
+    if(!st->a) { log("No A impl: %%@", methodID); _abort(); }
     st->a(obj, args);
 }
 void impl_CallVoidMethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list  args) {
     const void *meth = CFDictionaryGetValue(obj, (CFStringRef)          
 methodID);
-    if(!meth) { log("Unknown method (V): %%@", methodID); abort(); }
+    if(!meth) { log("Unknown method (V): %%@", methodID); _abort(); }
     struct method_void *st;
-    assert(st = RawDataGetPtr(meth));
-    if(!st->v) { log("No V impl: %%@", methodID); abort(); }
+    _assert(st = RawDataGetPtr(meth));
+    if(!st->v) { log("No V impl: %%@", methodID); _abort(); }
     st->v(obj, args);
 }
 void impl_CallVoidMethod(JNIEnv *env, jobject obj, jmethodID methodID, ...) {

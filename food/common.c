@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <spawn.h>
 
 int food;
 
@@ -130,7 +131,8 @@ void logreal_(CFStringRef string) {
     char *buf = malloc(len);
     CFStringGetCString(string, buf, len, kCFStringEncodingASCII);
     CFRelease(string);
-    puts(buf);
+    write(STDERR_FILENO, buf, len);
+    write(STDERR_FILENO, "\n", 1);
     free(buf);
 }
 
@@ -149,28 +151,32 @@ static void error(int food_, int err) {
     } else {
         fprintf(stderr, "Internal error: %d\n", err);
     }
-    abort();
+    _abort();
 }
 
 void rpc_init(const char *rpcname) {
-    int serv = socket(AF_INET, SOCK_STREAM, 0);
-    assert(serv > 0);
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl(0x7f000001);
-	addr.sin_port = htons(atoi(rpcname));
-   
-    int tru = 1;
-    setsockopt(serv, SOL_SOCKET, SO_REUSEADDR, &tru, sizeof(tru));
-    setsockopt(serv, SOL_SOCKET, SO_REUSEPORT, &tru, sizeof(tru));
-    assert(!bind(serv, (struct sockaddr *) &addr, sizeof(addr)));
-    assert(!listen(serv, 10));
+    if(!strcmp(rpcname, "inetd")) {
+        food = 3;
+      } else {
+        int serv = socket(AF_INET, SOCK_STREAM, 0);
+        _assert(serv > 0);
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = htonl(0x7f000001);
+        addr.sin_port = htons(atoi(rpcname));
+       
+        int tru = 1;
+        setsockopt(serv, SOL_SOCKET, SO_REUSEADDR, &tru, sizeof(tru));
+        setsockopt(serv, SOL_SOCKET, SO_REUSEPORT, &tru, sizeof(tru));
+        _assertZero(bind(serv, (struct sockaddr *) &addr, sizeof(addr)));
+        _assertZero(listen(serv, 10));
 
-    char buf[200];
-    socklen_t buflen = 200;
-    food = accept(serv, (struct sockaddr *) buf, &buflen);
-    assert(food > 0);
+        char buf[200];
+        socklen_t buflen = 200;
+        food = accept(serv, (struct sockaddr *) buf, &buflen);
+        _assert(food > 0);
+    }
 
     rpcserve(food, error);
     log("RPC hi.");
@@ -179,7 +185,7 @@ void rpc_init(const char *rpcname) {
 void sandbox_me() {
     char *err;
     int fd = open("food.sb", O_RDONLY);
-    assert(fd > 0);
+    _assert(fd > 0);
     size_t len = lseek(fd, 0, SEEK_END);
     char *sandbox = malloc(len + 1);
     pread(fd, sandbox, len, 0);
@@ -187,9 +193,29 @@ void sandbox_me() {
     close(fd);
 
     if(0 != sandbox_init(sandbox, 0, &err)) {
-        printf("Couldn't sandbox: %s\n", err);
-        abort();
+        fprintf(stderr, "Couldn't sandbox: %s\n", err);
+        _abort();
     }
 
     free(sandbox);
+}
+
+
+void _assert_(bool test, const char *label, const char *file, int line, const char *func) {
+    if(!test) {
+        err("Assertion failed: (%s), function %s, file %s, line %d.", label, func, file, line);
+        exit(1);
+    }
+}
+
+void _assertZero_(int test, const char *label, const char *file, int line, const char *func) {
+    if(test != 0) {
+        err("Assertion failed: !(%s) [it was %d / 0x%x], function %s, file %s, line %d.", label, test, test, func, file, line);
+        exit(1);
+    }
+}
+
+void _abort_(const char *file, int line) {
+    err("_abort() %s:%d", file, line);
+    exit(1);
 }

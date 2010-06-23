@@ -9,6 +9,7 @@
 	int rpc_fd;
 	pid_t pid;	
 	NSMutableArray *objects;
+	char *sekrit;
 }
 - (id)initWithDelegate:(id)delegate;
 // private

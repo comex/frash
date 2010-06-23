@@ -80,6 +80,17 @@ void rpc_init(const char *rpcname);
 
 void sandbox_me();
 
+__attribute__((noreturn))
+void _abort_(const char *file, int line);
+#define _abort() _abort_(__FILE__, __LINE__)
+
+void _assert_(bool test, const char *label, const char *file, int line, const char *func);
+void _assertZero_(int test, const char *label, const char *file, int line, const char *func);
+
+#define _abort() _abort_(__FILE__, __LINE__)
+#define _assert(x) _assert_((x), #x, __FILE__, __LINE__, __func__)
+#define _assertZero(x) _assertZero_((int) (x), #x, __FILE__, __LINE__, __func__)
+
 #ifdef __cplusplus
 }
 #endif

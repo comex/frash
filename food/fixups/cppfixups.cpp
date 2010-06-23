@@ -11,10 +11,10 @@ public:
 };
 
 MediaSource::MediaSource() {
-    printf("MediaSource\n");
+    fprintf(stderr, "MediaSource\n");
 }
 MediaSource::~MediaSource() {
-    printf("~MediaSource\n");
+    fprintf(stderr, "~MediaSource\n");
 }
 
 class MetaData {
@@ -32,30 +32,30 @@ public:
     
 MetaData::MetaData() { }
 void MetaData::setData(unsigned int, unsigned int, const void *, unsigned int) {
-    printf("setData called\n");
+    fprintf(stderr, "setData called\n");
 }
 bool MetaData::findInt64(unsigned int, int64_t *) {
-    printf("findInt64 called\n");
+    fprintf(stderr, "findInt64 called\n");
     return false;
 }
 bool MetaData::findInt32(unsigned int, int32_t *) {
-    printf("findInt32 called\n");
+    fprintf(stderr, "findInt32 called\n");
     return false;
 }
 bool MetaData::findCString(unsigned int, const char **) {
-    printf("findCString called\n");
+    fprintf(stderr, "findCString called\n");
     return false;
 }
 bool MetaData::setInt64(unsigned int, int64_t) {
-    printf("setInt64 called\n");
+    fprintf(stderr, "setInt64 called\n");
     return false;
 }
 bool MetaData::setInt32(unsigned int, int32_t) {
-    printf("setInt32 called\n");
+    fprintf(stderr, "setInt32 called\n");
     return false;
 }
 bool MetaData::setCString(unsigned int, const char *) {
-    printf("setCString called\n");
+    fprintf(stderr, "setCString called\n");
     return false;
 }
 
@@ -73,11 +73,11 @@ private:
     size_t _range_offset, _range_length;
 };
 MediaBuffer::MediaBuffer(unsigned int x) {
-    printf("MediaBuffer(%d)\n", x);
+    fprintf(stderr, "MediaBuffer(%d)\n", x);
     _range_offset = _range_length = 0;
 }
 void MediaBuffer::release() {
-    printf("MediaBuffer::release\n");
+    fprintf(stderr, "MediaBuffer::release\n");
 }
 sp<MetaData> MediaBuffer::meta_data() {
     abort();
@@ -105,7 +105,7 @@ status_t QueryCodecs(
         const sp<IOMX> &omx,
         const char *mimeType, bool queryDecoders,
         Vector<CodecCapabilities> *results) {
-    printf("QueryCodecs called\n");
+    fprintf(stderr, "QueryCodecs called\n");
     return -1;
 }
 int MEDIA_MIMETYPE_AUDIO_AAC = 42;
@@ -117,11 +117,11 @@ public:
 };
 
 OMXClient::OMXClient() {
-    printf("OMXClient\n");
+    fprintf(stderr, "OMXClient\n");
 }
 
 int OMXClient::connect() {
-    printf("OMXClient::connect\n");
+    fprintf(stderr, "OMXClient::connect\n");
     return -1;
 }
 
@@ -143,7 +143,7 @@ sp<OMXCodec> OMXCodec::Create(
             const sp<MediaSource> &source,
             const char *matchComponentName,
             unsigned int wtf) {
-    printf("OMXCodec::Create\n");
+    fprintf(stderr, "OMXCodec::Create\n");
     abort();
 }
 
@@ -152,11 +152,11 @@ sp<OMXCodec> OMXCodec::Create(
 
 extern "C" {
 void *_Znwj(unsigned int a) {
-    printf("operator new: %u\n", a);
+    fprintf(stderr, "operator new: %u\n", a);
     return (operator new)((unsigned long)a);
 }
 void *_Znaj(unsigned int a) {
-    printf("operator new[]: %u\n", a);
+    fprintf(stderr, "operator new[]: %u\n", a);
     return (operator new[])((unsigned long)a);
 }
 }

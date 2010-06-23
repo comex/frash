@@ -91,6 +91,10 @@
 	
 }
 
+- (NSURL *)baseURL {
+	return nil;
+}
+
 - (void)displaySync {
 	CGImageRef image = CGImageCreate(
 									 IOSurfaceGetWidth(sfc),

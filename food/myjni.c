@@ -61,7 +61,7 @@ jclass impl_GetObjectClass(JNIEnv *env, jobject obj) {
     CFStringRef clsname = g(obj, ".class");
     if(!clsname) {
         notice("object has no class: %@", obj);
-        abort();
+        _abort();
     }
     notice("GetObjectClass");
     return new_jobject((CFMutableDictionaryRef) CFDictionaryGetValue(classes, clsname));
@@ -92,7 +92,7 @@ jboolean *isCopy) {
         if(isCopy) *isCopy = false;
         // lol this won't handle actual UTF8 chars
         char *ret_ = malloc(CFStringGetLength(str)+1);
-        assert(CFStringGetCString(str, ret_, CFStringGetLength(str)+1, kCFStringEncodingUTF8));
+        _assert(CFStringGetCString(str, ret_, CFStringGetLength(str)+1, kCFStringEncodingUTF8));
         ret = ret_;
     }
     return ret;
@@ -131,13 +131,13 @@ jint *impl_GetIntArrayElements(JNIEnv *env, jintArray array, jboolean *isCopy) {
 
 void impl_ReleaseIntArrayElements(JNIEnv *env, jintArray array, jint *elems, jint mode) {
     // We never copy
-    assert(mode != JNI_ABORT);
+    _assert(mode != JNI_ABORT);
 }
 
 // VM (aka JNIInvokeInterface)
 
 jint impl_GetEnv(JavaVM *this, void **penv, jint version) {
-    assert(version == JNI_VERSION_1_4);
+    _assert(version == JNI_VERSION_1_4);
     *penv = &env;
     return 0;
 }

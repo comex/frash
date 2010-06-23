@@ -23,7 +23,7 @@ static CGContextRef randomctx;
 __attribute__((constructor))
 void init_randomctx() {
     randomctx = CGBitmapContextCreate(malloc(50*50*4), 50, 50, 8, 50*4, CGColorSpaceCreateDeviceRGB(),  kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast);
-    assert(randomctx);
+    _assert(randomctx);
 }
 
 CGRect rectFromRectF(const ANPRectF rectf) {
@@ -65,7 +65,7 @@ struct ANPTypeface {
 bool bitmap_impl_getPixelPacking(ANPBitmapFormat, ANPPixelPacking* packing) {
     // XXX
     notice("bitmap_impl_getPixelPacking");
-    abort();
+    _abort();
     //return true;
 }
 
@@ -75,17 +75,17 @@ bool bitmap_impl_getPixelPacking(ANPBitmapFormat, ANPPixelPacking* packing) {
 void log_impl_log(ANPLogType type, const char format[], ...) {
     switch(type) {
     case kDebug_ANPLogType:
-        printf("[DBG] "); break;
+        fprintf(stderr, "[DBG] "); break;
     case kWarning_ANPLogType:
-        printf("[WRN] "); break;
+        fprintf(stderr, "[WRN] "); break;
     case kError_ANPLogType:
-        printf("[ERR] "); break;
+        fprintf(stderr, "[ERR] "); break;
     default:
-        printf("[???] "); break;
+        fprintf(stderr, "[???] "); break;
     }
     va_list ap;
     va_start(ap, format);
-    vprintf(format, ap);
+    vfprintf(stderr, format, ap);
     va_end(ap);
 }
 
@@ -107,7 +107,7 @@ void aqtry_(OSStatus ret, const char *name) {
     if(!ret) return;
     notice("Audio error in %s:", name);
     notice("%d", (int) ret);
-    abort();
+    _abort();
 }
 #define aqtry(x) aqtry_(x, #x)
 
@@ -155,7 +155,7 @@ ANPAudioTrack*  audiotrack_impl_newTrack(uint32_t sampleRate,    // sampling rat
     switch(sampleFormat) {
     case kPCM16Bit_ANPSampleFormat: bits = 16; break;
     case kPCM8Bit_ANPSampleFormat:  bits =  8; break;
-    default:                        assert(false);
+    default:                        _assert(false);
     }
     FillOutASBDForLPCM(fmt, sampleRate, channelCount, bits, bits, false, false, false);
     aqtry(AudioQueueNewOutput(&fmt, trackCallbackProc, result, NULL, NULL, 0, &result->aq));
@@ -357,7 +357,7 @@ CTFontRef paint_mkfont(const ANPPaint *paint) {
     CGAffineTransform transform = CGAffineTransformMake(1, 0, paint->textSkewX, 1, 0, 0);
     transform = CGAffineTransformScale(transform, paint->textScaleX, 1);
     CTFontRef base = CTFontCreateWithName(paint->typeface->name, paint->textSize, &transform);
-    assert(base);
+    _assert(base);
     CTFontSymbolicTraits traits = 0;
     if(paint->style & kBold_ANPTypefaceStyle)
         traits |= kCTFontBoldTrait;
@@ -392,7 +392,7 @@ CFAttributedStringRef paint_mkats(const ANPPaint *paint, const void *text, uint3
     CGColorRelease(color);
 
     CTFontRef font = paint_mkfont(paint);
-    assert(font);
+    _assert(font);
     CFDictionarySetValue(dict, kCTFontAttributeName, font);
     CFRelease(font);
 
@@ -454,7 +454,7 @@ int paint_impl_getTextWidths(ANPPaint *paint, const void* text, uint32_t byteLen
     CTLineRef line = CTLineCreateWithAttributedString(ats);
    
     CFArrayRef runs = CTLineGetGlyphRuns(line);
-    assert(CFArrayGetCount(runs) == 1);
+    _assert(CFArrayGetCount(runs) == 1);
 
     CTRunRef run = (CTRunRef) CFArrayGetValueAtIndex(runs, 0);
     int glyphs = CTRunGetGlyphCount(run); 
@@ -630,14 +630,14 @@ IOSurfaceRef create_surface() {
 void window_impl_setVisibleRects(NPP instance, const ANPRectI rects[], int32_t count) {
     notice("%s", __func__);
     // Just ignore it.
-    //abort();
+    //_abort();
 }
 /** Clears any rectangles that are being tracked as a result of a call to
     setVisibleRects. This call is equivalent to setVisibleRect(inst, NULL, 0).
  */
 void    window_impl_clearVisibleRects(NPP instance) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 /** Given a boolean value of true the device will be requested to provide
     a keyboard. A value of false will result in a request to hide the
@@ -646,7 +646,7 @@ void    window_impl_clearVisibleRects(NPP instance) {
  */
 void    window_impl_showKeyboard(NPP instance, bool value) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 /** Called when a plugin wishes to enter into full screen mode. The plugin's
     Java class (set using kSetPluginStubJavaClassName_ANPSetValue) will be
@@ -654,17 +654,17 @@ void    window_impl_showKeyboard(NPP instance, bool value) {
  */
 void    window_impl_requestFullScreen(NPP instance) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 
 void    window_impl_exitFullScreen(NPP instance) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 
 void    window_impl_requestCenterFitZoom(NPP instance) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 // ANPSystemInterfaceV0
 
@@ -748,7 +748,7 @@ void path_impl_offset(ANPPath* src, float dx, float dy, ANPPath* dst) {
     /*CGPathRef newPath = CGPathCreateMutable();
     CGPathApply(path, (void *) newPath, offset_applier_func*/
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 
 /** Transform the path by the matrix. If dst is null, apply the
@@ -758,7 +758,7 @@ void path_impl_offset(ANPPath* src, float dx, float dy, ANPPath* dst) {
  */
 void path_impl_transform(ANPPath* src, const ANPMatrix*, ANPPath* dst) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 
 // ANPMatrixInterfaceV0
@@ -792,7 +792,7 @@ void        matrix_impl_copy(ANPMatrix* dst, const ANPMatrix* src) {
  */
 void        matrix_impl_get3x3(const ANPMatrix*, float[9]) {
     notice("get3x3");
-    abort();
+    _abort();
 }
 /** Initialize the matrix from values in a float array,
     where the values are treated as follows:
@@ -802,7 +802,7 @@ void        matrix_impl_get3x3(const ANPMatrix*, float[9]) {
  */
 void        matrix_impl_set3x3(ANPMatrix*, const float[9]) {
     notice("set3x3");
-    abort();
+    _abort();
 }
 
 void        matrix_impl_setIdentity(ANPMatrix *matrix) {
@@ -822,11 +822,11 @@ void        matrix_impl_postScale(ANPMatrix *matrix, float sx, float sy) {
 }
 void        matrix_impl_preSkew(ANPMatrix *matrix, float kx, float ky) {
     notice("skew");
-    abort();
+    _abort();
 }
 void        matrix_impl_postSkew(ANPMatrix *matrix, float kx, float ky) {
     notice("skew");
-    abort();
+    _abort();
 }
 void        matrix_impl_preRotate(ANPMatrix *matrix, float degrees) {
    matrix->transform = CGAffineTransformConcat(CGAffineTransformMakeRotation((degrees / 180.0) * M_PI), matrix->transform); 
@@ -876,7 +876,7 @@ ANPCanvas*  canvas_impl_newCanvas(ANPBitmap *bitmap) {
     notice("width:%d height:%d baseAddr:%p rowBytes:%d format:%d", bitmap->width, bitmap->height, bitmap->baseAddr, bitmap->rowBytes, bitmap->format);
     
     
-    //assert(bitmap->format == kRGBA_8888_ANPBitmapFormat);
+    //_assert(bitmap->format == kRGBA_8888_ANPBitmapFormat);
     if(bitmap->format != kRGBA_8888_ANPBitmapFormat) {
         bitmap->width = 1;
         bitmap->height = 1;
@@ -919,7 +919,7 @@ void        canvas_impl_rotate(ANPCanvas *canvas, float degrees) {
 
 void        canvas_impl_skew(ANPCanvas *canvas, float kx, float ky) {
     notice("canvas_impl_skew: stub");
-    abort();
+    _abort();
 }
 
 void        canvas_impl_concat(ANPCanvas *canvas, const ANPMatrix *matrix) {
@@ -933,7 +933,7 @@ void        canvas_impl_clipRect(ANPCanvas *canvas, const ANPRectF *rectf) {
 }
 
 void        canvas_impl_clipPath(ANPCanvas *canvas, const ANPPath *path) {
-    notice("%s", __func__); abort();
+    notice("%s", __func__); _abort();
     CGContextAddPath(canvas->ctx, path->path);
     CGContextClip(canvas->ctx);
     canvas->clipped = true;
@@ -945,7 +945,7 @@ void        canvas_impl_getTotalMatrix(ANPCanvas *canvas, ANPMatrix *matrix) {
 
 bool        canvas_impl_getLocalClipBounds(ANPCanvas *canvas, ANPRectF *bounds, bool aa) {
     // ignore aa
-    notice("%s", __func__); abort();
+    notice("%s", __func__); _abort();
     if(!canvas->clipped) return false;
     *bounds = rectFFromRect(CGContextGetClipBoundingBox(canvas->ctx));
     return true;
@@ -956,7 +956,7 @@ bool        canvas_impl_getLocalClipBounds(ANPCanvas *canvas, ANPRectF *bounds, 
  */
 bool        canvas_impl_getDeviceClipBounds(ANPCanvas*, ANPRectI* bounds) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 
 void        canvas_impl_drawColor(ANPCanvas *canvas, ANPColor color) {
@@ -966,7 +966,12 @@ void        canvas_impl_drawColor(ANPCanvas *canvas, ANPColor color) {
     components[2] = (1.0/256) * (color & 0x000000ff);
     components[3] = (1.0/256) * (color & 0xff000000);   
     CGContextSetFillColor(canvas->ctx, components);
-    CGContextSetStrokeColor(canvas->ctx, components);
+    int w = CGBitmapContextGetWidth(canvas->ctx);
+    int h = CGBitmapContextGetHeight(canvas->ctx);
+    log("canvas_impl_drawColor: w=%d h=%d", w, h);
+    if(w > 0 && h > 0) {
+        CGContextFillRect(canvas->ctx, CGRectMake(0, 0, w, h));
+    }
 }
 
 CGColorRef color_getref(ANPColor color) {
@@ -1051,7 +1056,7 @@ void        canvas_impl_drawRect(ANPCanvas *canvas, const ANPRectF *rect, const 
 
 void        canvas_impl_drawOval(ANPCanvas *canvas, const ANPRectF*, const ANPPaint *paint) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
     
 void        canvas_impl_drawPath(ANPCanvas *canvas, const ANPPath *path, const ANPPaint *paint) {
@@ -1077,7 +1082,7 @@ void        canvas_impl_drawText(ANPCanvas *canvas, const void* text, uint32_t b
 void       canvas_impl_drawPosText(ANPCanvas *canvas, const void* text, uint32_t byteLength,
                            const float xy[], const ANPPaint *paint) {
     notice("%s", __func__);
-    abort();
+    _abort();
 }
 
 void        canvas_impl_drawBitmapRect(ANPCanvas *canvas, const ANPBitmap *bitmap,
@@ -1086,7 +1091,7 @@ void        canvas_impl_drawBitmapRect(ANPCanvas *canvas, const ANPBitmap *bitma
     notice("%s: src={%d, %d, %d, %d}, dst={%f, %f, %f, %f}", __func__, src->left, src->top, src->right, src->bottom,
                                                                          dst->left, dst->top, dst->right, dst->bottom);
 
-    abort();
+    _abort();
     CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, bitmap->baseAddr, bitmap->rowBytes * bitmap->height, NULL);
     CGImageRef image = CGImageCreate(bitmap->width, bitmap->height, 8, 32, bitmap->rowBytes, CGColorSpaceCreateDeviceRGB(),  kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast, provider, NULL, false, kCGRenderingIntentDefault);
     CGImageRef image2 = CGImageCreateWithImageInRect(image, rectFromRectI(*src));
@@ -1099,7 +1104,7 @@ void        canvas_impl_drawBitmapRect(ANPCanvas *canvas, const ANPBitmap *bitma
 
 void        canvas_impl_drawBitmap(ANPCanvas *canvas, const ANPBitmap *bitmap, float x, float y,
                           const ANPPaint *paint) {
-    abort();
+    _abort();
     CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, bitmap->baseAddr, bitmap->rowBytes * bitmap->height, NULL);
     CGImageRef image = CGImageCreate(bitmap->width, bitmap->height, 8, 32, bitmap->rowBytes, CGColorSpaceCreateDeviceRGB(),  kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast, provider, NULL, false, kCGRenderingIntentDefault);
     do_paint(canvas, paint);
@@ -1123,7 +1128,7 @@ static void postEventCB(CFRunLoopTimerRef timer, void *info) {
 }
 
 void event_postEvent(NPP inst, const ANPEvent *event) {
-    assert(event->inSize >= sizeof(ANPEvent));
+    _assert(event->inSize >= sizeof(ANPEvent));
     ANPEvent *ev2 = (ANPEvent *) malloc(event->inSize);
     memcpy(ev2, event, event->inSize);
     CFRunLoopTimerContext ctx;
@@ -1164,7 +1169,7 @@ void surface_impl_unlock(JNIEnv* env, jobject surface) {
     /*int fd = open("foo.txt", O_WRONLY | O_CREAT, 0755);
     write(fd, IOSurfaceGetBaseAddress(sfc), IOSurfaceGetAllocSize(sfc));
     close(fd);*/
-    assert(!display_sync(food));
+    _assertZero(display_sync(food));
 }
 // 
 
@@ -1173,19 +1178,19 @@ void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {
     switch(typ) {
     case kLogInterfaceV0_ANPGetValue: {
         ANPLogInterfaceV0 *iface = (ANPLogInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->log)) = stub(log_impl_log);
         break; }
 
     case kBitmapInterfaceV0_ANPGetValue: {
         ANPBitmapInterfaceV0 *iface = (ANPBitmapInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->getPixelPacking)) = stub(bitmap_impl_getPixelPacking);
         break; }
 
     case kMatrixInterfaceV0_ANPGetValue: {
         ANPMatrixInterfaceV0 *iface = (ANPMatrixInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->newMatrix)) = stub(matrix_impl_newMatrix);
         *((void **) (&iface->deleteMatrix)) = stub(matrix_impl_deleteMatrix);
         *((void **) (&iface->getFlags)) = stub(matrix_impl_getFlags);
@@ -1209,7 +1214,7 @@ void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {
 
     case kPathInterfaceV0_ANPGetValue: {
         ANPPathInterfaceV0 *iface = (ANPPathInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->newPath)) = stub(path_impl_newPath);
         *((void **) (&iface->deletePath)) = stub(path_impl_deletePath);
         *((void **) (&iface->copy)) = stub(path_impl_copy);
@@ -1228,7 +1233,7 @@ void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {
 
     case kTypefaceInterfaceV0_ANPGetValue: {
         ANPTypefaceInterfaceV0 *iface = (ANPTypefaceInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->createFromName)) = stub(typeface_impl_createFromName);
         *((void **) (&iface->createFromTypeface)) = stub(typeface_impl_createFromTypeface);
         *((void **) (&iface->getRefCount)) = stub(typeface_impl_getRefCount);
@@ -1241,7 +1246,7 @@ void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {
 
     case kPaintInterfaceV0_ANPGetValue: {
         ANPPaintInterfaceV0 *iface = (ANPPaintInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->newPaint)) = stub(paint_impl_newPaint);
         *((void **) (&iface->deletePaint)) = stub(paint_impl_deletePaint);
         *((void **) (&iface->getFlags)) = stub(paint_impl_getFlags);
@@ -1277,7 +1282,7 @@ void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {
 
     case kCanvasInterfaceV0_ANPGetValue: {
         ANPCanvasInterfaceV0 *iface = (ANPCanvasInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->newCanvas)) = stub(canvas_impl_newCanvas);
         *((void **) (&iface->deleteCanvas)) = stub(canvas_impl_deleteCanvas);
         *((void **) (&iface->save)) = stub(canvas_impl_save);
@@ -1306,7 +1311,7 @@ void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {
 
     case kWindowInterfaceV0_ANPGetValue: {
         ANPWindowInterfaceV0 *iface = (ANPWindowInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->setVisibleRects)) = stub(window_impl_setVisibleRects);
         *((void **) (&iface->clearVisibleRects)) = stub(window_impl_clearVisibleRects);
         *((void **) (&iface->showKeyboard)) = stub(window_impl_showKeyboard);
@@ -1317,7 +1322,7 @@ void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {
 
     case kAudioTrackInterfaceV0_ANPGetValue: {
         ANPAudioTrackInterfaceV0 *iface = (ANPAudioTrackInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->newTrack)) = stub(audiotrack_impl_newTrack);
         *((void **) (&iface->deleteTrack)) = stub(audiotrack_impl_deleteTrack);
         *((void **) (&iface->start)) = stub(audiotrack_impl_start);
@@ -1328,20 +1333,20 @@ void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {
 
     case kEventInterfaceV0_ANPGetValue: {
         ANPEventInterfaceV0 *iface = (ANPEventInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->postEvent)) = stub(event_impl_postEvent);
         break; }
 
     case kSystemInterfaceV0_ANPGetValue: {
         ANPSystemInterfaceV0 *iface = (ANPSystemInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->getApplicationDataDirectory)) = stub(system_impl_getApplicationDataDirectory);
         *((void **) (&iface->loadJavaClass)) = stub(system_impl_loadJavaClass);
         break; }
 
     case kSurfaceInterfaceV0_ANPGetValue: {
         ANPSurfaceInterfaceV0 *iface = (ANPSurfaceInterfaceV0 *) ptr;
-        assert(iface->inSize == sizeof(*iface));
+        _assert(iface->inSize == sizeof(*iface));
         *((void **) (&iface->lock)) = stub(surface_impl_lock);
         *((void **) (&iface->unlock)) = stub(surface_impl_unlock);
         break; }

@@ -1,3 +1,6 @@
+# This must be first in the file
+> async set_sekrit(buf sekrit);
+
 > async use_surface(int name);
 > async display_sync();
 > sync get_parameters(out buf params, out int params_count);
@@ -5,6 +8,9 @@
 > sync get_window_object(out int obj);
 > sync evaluate_web_script(buf script, out int obj);
 > sync get_object_property(int obj, buf property, out int obj2);
+> sync get_string_object(buf string, out int obj2);
+> sync get_int_object(int theint, out int obj2);
+> sync invoke_object_property(int obj, buf property, buf args, out int obj2);
 > sync get_string_value(int obj, out bool valid, out buf value);
 
 # Drawing
