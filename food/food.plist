@@ -11,8 +11,8 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/var/mobile/food_wrapper</string>
-        <string>/var/mobile/food</string>
+        <string>/var/mobile/frash/food_wrapper</string>
+        <string>/var/mobile/frash/food</string>
         <string>inetd</string>
     </array>
 
