@@ -1,0 +1,15 @@
+#!/bin/sh
+# run as root please
+set -e
+rm -rf iroot
+mkdir -p 'iroot/System/Library/Internet Plug-Ins'
+cp -a Frash.webplugin 'iroot/System/Library/Internet Plug-Ins/Frash.webplugin'
+cp -a Player2/build/Release-iphoneos/Plugin.dylib 'iroot/System/Library/Internet Plug-Ins/Frash.webplugin/'
+mkdir -p iroot/System/Library/LaunchDaemons
+cp food/food.plist iroot/System/Library/LaunchDaemons/
+mkdir -p iroot/var/mobile/frash
+cp -a food/food{,.sb,_wrapper} utils/lib{c,}utils.dylib icu/*.dylib libgcc/libgccstuff.dylib oem.cfg iroot/var/mobile/frash/
+chown -R 501 iroot/var/mobile
+cp -r DEBIAN iroot/DEBIAN
+chown -R 0 iroot/DEBIAN
+dpkg-deb -b iroot frash.deb

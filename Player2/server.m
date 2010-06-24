@@ -95,7 +95,7 @@ static Server *get_server(int rpc_fd) {
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-	NSLog(@"connectionDidReceiveData");
+	//NSLog(@"connectionDidReceiveData");
 	connection_got_data(rpc_fd, stream, (void *) [data bytes], [data length]);
 }
 
@@ -113,8 +113,10 @@ static Server *get_server(int rpc_fd) {
 static void error(int rpc_fd, int err) {
 	Server *self = get_server(rpc_fd);	
 	NSString *str;
-	if(err < 0) {
-		str = [NSString stringWithFormat:@"Socket error: %s", strerror(-err)];
+	if(err == 0) {
+		str = [NSString stringWithFormat:@"Unexpected error"];
+	} else if(err < 0) {
+		str = [NSString stringWithFormat:@"Socket error: %s", strerror(-err)];		
 	} else {
 		str = [NSString stringWithFormat:@"Internal error: %d", err];
 	}
@@ -198,6 +200,13 @@ int set_sekrit(int rpc_fd, void *sekrit_, size_t sekrit_len) {
 	Server *self = get_server(rpc_fd);
 	NSLog(@"sekrit: %s", sekrit_);	
 	if(!self->sekrit) self->sekrit = sekrit_;
+	return 0;
+}
+
+int abort_msg(int rpc_fd, void *message, size_t message_len) {
+	Server *self = get_server(rpc_fd);
+	NSString *str = [[[NSString alloc] initWithBytes:message length:message_len encoding:NSUTF8StringEncoding] autorelease];		
+	[self dieWithError:str];
 	return 0;
 }
 

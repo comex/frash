@@ -201,24 +201,39 @@ void sandbox_me() {
     free(sandbox);
 }
 
+__attribute__((noreturn))
+static void do_abort(char *message) {
+    err("%s", message);
+    abort_msg(food, message, strlen(message)); // may or may not succeed
+    exit(1);
+}
 
 void _assert_(bool test, const char *label, const char *file, int line, const char *func) {
     if(!test) {
-        err("Assertion failed: (%s), function %s, file %s, line %d.", label, func, file, line);
-        exit(1);
+        char *x;
+        asprintf(&x, "Assertion failed: (%s), function %s, file %s, line %d.", label, func, file, line);
+        do_abort(x);
     }
 }
 
 void _assertZero_(int test, const char *label, const char *file, int line, const char *func) {
     if(test != 0) {
-        err("Assertion failed: !(%s) [it was %d / 0x%x], function %s, file %s, line %d.", label, test, test, func, file, line);
-        exit(1);
+        char *x;
+        asprintf(&x, "Assertion failed: !(%s) [it was %d / 0x%x], function %s, file %s, line %d.", label, test, test, func, file, line);
+        do_abort(x);
     }
 }
 
 void _abort_(const char *file, int line) {
-    err("_abort() %s:%d", file, line);
-    exit(1);
+    char *x;
+    asprintf(&x, "_abort() %s:%d", file, line);
+    do_abort(x);
+}
+
+void _abortWithError_(const char *file, int line, const char *error) {
+    char *x;
+    asprintf(&x, "%s %s:%d", error, file, line);
+    do_abort(x);
 }
 
 #if TIMING

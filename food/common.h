@@ -83,6 +83,9 @@ void sandbox_me();
 __attribute__((noreturn))
 void _abort_(const char *file, int line);
 #define _abort() _abort_(__FILE__, __LINE__)
+__attribute__((noreturn))
+void _abortWithError_(const char *file, int line, const char *error);
+#define _abortWithError(error) _abortWithError_(__FILE__, __LINE__, error)
 
 void _assert_(bool test, const char *label, const char *file, int line, const char *func);
 void _assertZero_(int test, const char *label, const char *file, int line, const char *func);

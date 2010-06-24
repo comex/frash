@@ -1,6 +1,8 @@
 # This must be first in the file
 > async set_sekrit(buf sekrit);
 
+> sync abort_msg(buf message);
+
 > async use_surface(int name);
 > async display_sync(int l, int t, int r, int b);
 > sync get_parameters(out buf params, out int params_count);

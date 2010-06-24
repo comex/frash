@@ -33,6 +33,7 @@ myjni.o: myjni.c multistuff.settings.h
 OBJS := food.o np.o anp.o neon.o multistuff.o common.o myjni.o classes.o fixups/cfixups.o fixups/cppfixups.o fixups/rthread.o fixups/sfixups.o
 food: ../rpc/food_rpc1.h $(OBJS)
 	g++-4.2 $(STUFF) -o food $(OBJS) ../rpc/food_rpc1.o -F$(SDK)/System/Library/Frameworks -F$(SDK)/System/Library/PrivateFrameworks -framework CoreGraphics -framework IOSurface -framework CoreFoundation -framework CoreText -framework AudioToolbox -framework GraphicsServices -image_base 0x08000000
+	ldid -S food
 
 food_wrapper: food_wrapper.c
 	gcc-4.2 $(STUFF) -o food_wrapper food_wrapper.c

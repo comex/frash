@@ -11,12 +11,15 @@
 
 (allow ipc-posix-shm)
 
+(allow system-socket)
+
 (allow file-read*
     (regex #"/usr/lib(/|$)")
     (regex #"/usr/share(/|$)")
     (regex #"/System/Library/(Frameworks|Fonts)")
     (regex #"/Library/Managed Preferences/mobile(/|$)")
     (regex #"/private/var/Managed Preferences/mobile(/|$)")
+    (regex #"/private/var/mobile$")
     (regex #"/private/var/mobile/Library/Preferences/\.GlobalPreferences\.plist")
     (regex #"/var$")
     (regex #"/var/stash.*icu[^/]*\.dat$")

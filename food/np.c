@@ -378,6 +378,9 @@ int connection_got_data(int rpcfd, NPStream *stream, void *data, size_t data_len
 static void even_later(CFRunLoopTimerRef, void *);
 int connection_all_done(int rpcfd, NPStream *stream, bool successful) {
     log("connection_all_done [%p]: successful=%d", stream, successful);
+    if(!successful) {
+        _abortWithError("The connection failed.");
+    }
     NPReason reason = successful ? NPRES_DONE : NPRES_NETWORK_ERR;
     int ret = pluginfuncs.destroystream(&nppt, stream, reason);
     _assertZero(ret);

@@ -1,0 +1,3 @@
+#!/bin/sh
+launchctl unload /System/Library/LaunchDaemons/food.plist
+killall MobileSafari || true

@@ -1144,9 +1144,13 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
         temp = calloc(1, IOSurfaceGetAllocSize(sfc));
         //memset(temp, 0xff, IOSurfaceGetAllocSize(sfc));
         temp_sz = IOSurfaceGetAllocSize(sfc);
-        dirtyRect = NULL; // it is probably invalid
     }
     //log("dirtyRect=%p", dirtyRect);
+    // sanity, not security check, fwiw
+    if(dirtyRect && (dirtyRect->left >= (int)IOSurfaceGetWidth(sfc) || dirtyRect->top >= (int)IOSurfaceGetHeight(sfc) || dirtyRect->right >= (int)IOSurfaceGetWidth(sfc) || dirtyRect->bottom >= (int)IOSurfaceGetHeight(sfc))) {
+        dirtyRect = false;
+    }
+
     if(dirtyRect) {
         //log("%d,%d,%d,%d", dirtyRect->left, dirtyRect->top, dirtyRect->right, dirtyRect->bottom);
         cur_dirty_valid = true;
