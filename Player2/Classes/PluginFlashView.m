@@ -123,12 +123,12 @@
 	CFRelease(data);
 	self.layer.contents = (id) image;
  	CFRelease(image);*/
-	//self.layer.contents = (id) sfc;
-	if(rect->size.width) {
+	self.layer.opacity = self.layer.opacity == 1.000 ? 0.9999 : 1.000;
+	/*if(rect->size.width) {
 		[self.layer setNeedsDisplayInRect:*rect];
 	} else {
 		[self.layer setNeedsDisplay];
-	}
+	}*/
 }
 
 - (NSDictionary *)paramsDict {

@@ -1,8 +1,9 @@
 Package: frash
-Architecture: armv7
+Architecture: iphoneos-arm 
 Name: frash
 Version: 0.00
 Priority: optional
+Depends: gsc.armv7
 Description: All your base are belong to us?
 Homepage: http://github.com/comex/frash
 Maintainer: comex <comexk@gmail.com>

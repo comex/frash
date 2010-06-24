@@ -1139,8 +1139,9 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
         refresh_size();
     }
     if(temp_sz != IOSurfaceGetAllocSize(sfc)) {
+        log("alloc %d", temp_sz);
         if(temp) free(temp);
-        temp = calloc(1, IOSurfaceGetAllocSize(sfc) + 128);
+        temp = calloc(1, IOSurfaceGetAllocSize(sfc));
         //memset(temp, 0xff, IOSurfaceGetAllocSize(sfc));
         temp_sz = IOSurfaceGetAllocSize(sfc);
         dirtyRect = NULL; // it is probably invalid
