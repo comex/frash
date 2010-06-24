@@ -105,8 +105,8 @@ struct ANPAudioTrack {
 
 void aqtry_(OSStatus ret, const char *name) {
     if(!ret) return;
-    notice("Audio error in %s:", name);
-    notice("%d", (int) ret);
+    err("Audio error in %s:", name);
+    err("%d", (int) ret);
     _abort();
 }
 #define aqtry(x) aqtry_(x, #x)
@@ -155,7 +155,7 @@ ANPAudioTrack*  audiotrack_impl_newTrack(uint32_t sampleRate,    // sampling rat
     switch(sampleFormat) {
     case kPCM16Bit_ANPSampleFormat: bits = 16; break;
     case kPCM8Bit_ANPSampleFormat:  bits =  8; break;
-    default:                        _assert(false);
+    default:                        _abort();
     }
     FillOutASBDForLPCM(fmt, sampleRate, channelCount, bits, bits, false, false, false);
     aqtry(AudioQueueNewOutput(&fmt, trackCallbackProc, result, NULL, NULL, 0, &result->aq));
@@ -1128,6 +1128,8 @@ void event_impl_postEvent(NPP inst, const ANPEvent* event) {
 
 static void *temp;
 static size_t temp_sz;
+static ANPRectI cur_dirty;
+static bool cur_dirty_valid;
 
 // ANPSurfaceInterfaceV0
 extern "C" void refresh_size();
@@ -1138,9 +1140,18 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
     }
     if(temp_sz != IOSurfaceGetAllocSize(sfc)) {
         if(temp) free(temp);
-        temp = calloc(1, IOSurfaceGetAllocSize(sfc));
+        temp = calloc(1, IOSurfaceGetAllocSize(sfc) + 128);
         //memset(temp, 0xff, IOSurfaceGetAllocSize(sfc));
         temp_sz = IOSurfaceGetAllocSize(sfc);
+        dirtyRect = NULL; // it is probably invalid
+    }
+    //log("dirtyRect=%p", dirtyRect);
+    if(dirtyRect) {
+        //log("%d,%d,%d,%d", dirtyRect->left, dirtyRect->top, dirtyRect->right, dirtyRect->bottom);
+        cur_dirty_valid = true;
+        cur_dirty = *dirtyRect;
+    } else {
+        cur_dirty_valid = false;
     }
     bitmap->baseAddr = temp;
     bitmap->format = kRGBA_8888_ANPBitmapFormat;
@@ -1152,16 +1163,33 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
 
 //#include <fcntl.h>
 extern "C" void rgba_bgra_copy(void *dest, void *src, void *end);
+
 void surface_impl_unlock(JNIEnv* env, jobject surface) {
     notice("%s surface=%p", __func__, surface);
     if(!sfc || !IOSurfaceGetWidth(sfc) || !IOSurfaceGetHeight(sfc)) return;
-    void *end = (void *) ((char*)temp + IOSurfaceGetAllocSize(sfc));
-    rgba_bgra_copy(IOSurfaceGetBaseAddress(sfc), temp, end);
+    if(cur_dirty_valid) {
+        int rowsize = (cur_dirty.right - cur_dirty.left) * 4;
+        int fullrowsize = IOSurfaceGetBytesPerRow(sfc);
+        int rowoffset = cur_dirty.top * fullrowsize + cur_dirty.left * 4;
+        char *start = ((char *) IOSurfaceGetBaseAddress(sfc)) + rowoffset;
+        char *tempstart = ((char *) temp) + rowoffset;
+        char *end = tempstart + rowsize;
+        for(int y = cur_dirty.top; y < cur_dirty.bottom; y++) {
+            rgba_bgra_copy((void *) start, (void *) tempstart, (void *) end);
+            start += fullrowsize;
+            tempstart += fullrowsize;
+            end += fullrowsize;
+        }
+        _assertZero(display_sync(food, cur_dirty.left, cur_dirty.top, cur_dirty.right, cur_dirty.bottom));
+    } else {
+        void *end = (void *) ((char *)temp + IOSurfaceGetAllocSize(sfc));
+        rgba_bgra_copy(IOSurfaceGetBaseAddress(sfc), temp, end);
+        _assertZero(display_sync(food, 0, 0, 0, 0));
+    }
     //memcpy(IOSurfaceGetBaseAddress(sfc), temp, IOSurfaceGetAllocSize(sfc));
     /*int fd = open("foo.txt", O_WRONLY | O_CREAT, 0755);
     write(fd, IOSurfaceGetBaseAddress(sfc), IOSurfaceGetAllocSize(sfc));
     close(fd);*/
-    _assertZero(display_sync(food));
 }
 // 
 

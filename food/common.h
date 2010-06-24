@@ -87,7 +87,6 @@ void _abort_(const char *file, int line);
 void _assert_(bool test, const char *label, const char *file, int line, const char *func);
 void _assertZero_(int test, const char *label, const char *file, int line, const char *func);
 
-#define _abort() _abort_(__FILE__, __LINE__)
 #define _assert(x) _assert_((x), #x, __FILE__, __LINE__, __func__)
 #define _assertZero(x) _assertZero_((int) (x), #x, __FILE__, __LINE__, __func__)
 
@@ -108,4 +107,10 @@ extern int movie_w, movie_h, pending_movie_w, pending_movie_h;
 #define notice(args...) logx(3, args)
 #define log(args...) logx(1, args)
 #define err(args...) logx(0, args)
-
+#define TIMING 1
+#if TIMING
+uint64_t getus();
+#define TIME(thing) do { uint64_t _ta = getus(); thing; uint64_t _tb = getus(); log("[%.4ld us] %s", (long int) (_tb - _ta), #thing); } while(0)
+#else
+#define TIME(thing) thing
+#endif

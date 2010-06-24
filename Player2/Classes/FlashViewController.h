@@ -19,7 +19,7 @@
 }
 @property (retain) Server *server;
 - (void)useSurface:(IOSurfaceRef)sfc;
-- (void)displaySync;
+- (void)displaySyncInRect:(CGRect *)rect;
 - (CGSize)movieSize;
 - (void)diedWithError:(NSString *)error;
 

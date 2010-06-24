@@ -49,7 +49,7 @@ int prctl(int option, unsigned long arg2, unsigned long arg3 , unsigned long arg
 }
 
 int cacheflush(char *start, char *end, int flags) {
-    fprintf(stderr, "cacheflush %p %p %d\n", start, end, flags);
+    //fprintf(stderr, "cacheflush %p %p %d\n", start, end, flags);
     sys_dcache_flush(start, (size_t) (end - start));
     sys_icache_invalidate(start, (size_t) (end - start));
     return 0;
@@ -184,22 +184,22 @@ const char *_ctype_ = _C_ctype_;
 void *rmmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
     // Linux and OSX use different values for MAP_ANON(YMOUS)
     if(flags & 0x1000) {
-        fprintf(stderr, "MAP_EXECUTAbLE\n");
+        //fprintf(stderr, "MAP_EXECUTAbLE\n");
         flags &= ~0x1000;
     }
     if(flags & 0x20) {
-        fprintf(stderr, "MAP_RENAME\n");
+        //fprintf(stderr, "MAP_RENAME\n");
         flags &= ~0x20;
         flags |= MAP_ANON;
     }
     void *ret = mmap(addr, len, prot, flags, fd, offset);
-    fprintf(stderr, "addr:%p len:%d prot:%d flags:%x fd:%d offset:%x\n", addr, (int) len, prot, flags, fd, (int) offset);
-    fprintf(stderr, "mmap ret: %p\n", ret);
+    //fprintf(stderr, "addr:%p len:%d prot:%d flags:%x fd:%d offset:%x\n", addr, (int) len, prot, flags, fd, (int) offset);
+    //fprintf(stderr, "mmap ret: %p\n", ret);
     return ret;
 }
 
 int rmprotect(void *addr, size_t len, int prot) {
-    fprintf(stderr, "mprotect %p (%d): %x\n", addr, (int) len, prot);
+    //fprintf(stderr, "mprotect %p (%d): %x\n", addr, (int) len, prot);
     return mprotect(addr, len, prot);
 }
 

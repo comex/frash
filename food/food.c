@@ -140,6 +140,154 @@ static void do_patches() {
     //*((void **)    0x0213dfdc) = stubify(logpatched, "logpatched", false);
 }
 
+static void base_load_elf(int fd, Elf32_Sym **symtab, int *symtab_size, void ***init_array, Elf32_Word *init_array_size, char **strtab) {
+    Elf32_Ehdr ehdr;
+    xread(fd, &ehdr, sizeof(ehdr));
+
+    _assert(ehdr.e_type == ET_DYN);
+    _assert(ehdr.e_machine == EM_ARM);
+
+    _assert(ehdr.e_phentsize >= sizeof(Elf32_Phdr));
+
+    size_t sz = 0;
+
+    lseek(fd, ehdr.e_phoff, SEEK_SET);
+    int phnum = ehdr.e_phnum;
+    while(phnum--) {
+        Elf32_Phdr *ph = (Elf32_Phdr *) malloc(ehdr.e_phentsize);
+        xread(fd, ph, ehdr.e_phentsize);
+        size_t sz_ = ph->p_vaddr + ph->p_memsz;
+        if(sz_ > sz) sz = sz_;
+        free(ph);
+    }
+ 
+    sz = (sz + 0xfff) & ~0xfff;
+
+    reloc_base = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+    reloc_size = sz;
+    _assert(reloc_base != MAP_FAILED);
+
+    notice("--> reloc_base = %p", reloc_base);
+
+
+    lseek(fd, ehdr.e_phoff, SEEK_SET);
+    phnum = ehdr.e_phnum;
+    while(phnum--) {
+        Elf32_Phdr *ph = (Elf32_Phdr *) malloc(ehdr.e_phentsize);
+        xread(fd, ph, ehdr.e_phentsize);
+        notice("type:%x offset:%x vaddr:%x filesz:%x memsz:%x end:%x align:%x", (int)ph->p_type, ph->p_offset, ph->p_vaddr, ph->p_filesz, ph->p_memsz, ph->p_vaddr + ph->p_memsz, ph->p_align);
+        // Cheat
+        _assert(ph->p_filesz <= ph->p_memsz);
+        if(ph->p_filesz > 0) {
+            ssize_t br = pread(fd, v2v(ph->p_vaddr), ph->p_filesz, ph->p_offset);
+            _assert(ph->p_filesz == br);
+            /**** WTF.
+             * If I use mmap for those cases, pread acts very mysteriously.
+             * It hangs, but if I ctrl-c and cont in gdb, it then fails.
+             * I don't think it ought to?
+            if(ph->p_align != 0x1000) {
+            } else {
+                _assert((ph->p_vaddr & 0xfff) == (ph->p_offset & 0xfff));
+                void *ret = mmap(v2v(ph->p_vaddr & ~0xfff), ph->p_filesz, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FIXED, fd, ph->p_offset & ~0xfff);
+                _assert(ret != MAP_FAILED);
+            } */
+        }
+        free(ph);
+    }
+
+    _assert(ehdr.e_shentsize >= sizeof(Elf32_Shdr));
+    *symtab = NULL;
+    *strtab = NULL;
+    Elf32_Word shstrtab = 0;
+
+    lseek(fd, ehdr.e_shoff, SEEK_SET);
+    int shnum = ehdr.e_shnum;
+    while(shnum--) {
+        Elf32_Shdr *sh = (Elf32_Shdr *) malloc(ehdr.e_shentsize);
+        xread(fd, sh, ehdr.e_shentsize);
+        if(sh->sh_type == SHT_DYNSYM) {
+            *symtab = v2v(sh->sh_addr);
+            *symtab_size = sh->sh_size;
+        } else if(sh->sh_type == SHT_STRTAB) {
+            if(*strtab) {
+                shstrtab = sh->sh_offset;
+            } else {
+                *strtab = v2v(sh->sh_addr);
+            }
+        }
+        free(sh);
+    }
+
+    _assert(*symtab);
+    _assert(*strtab);
+    _assert(shstrtab);
+
+    *init_array = NULL;
+
+    lseek(fd, ehdr.e_shoff, SEEK_SET);
+    shnum = ehdr.e_shnum;
+    while(shnum--) {
+        Elf32_Shdr *sh = (Elf32_Shdr *) malloc(ehdr.e_shentsize);
+        xread(fd, sh, ehdr.e_shentsize);
+        _assert(sh->sh_type != SHT_RELA);
+        char buf[12];
+        pread(fd, buf, 12, shstrtab + sh->sh_name);
+        if(!memcmp(buf, ".init_array", 12)) {
+            *init_array = v2v(sh->sh_addr);
+            *init_array_size = sh->sh_size;
+        }
+        if(sh->sh_type == SHT_REL) {
+            notice("SHT_REL");
+            void *base = v2v(sh->sh_addr);
+            char *p = (char *) base;
+            while(p - (char *) base < sh->sh_size) {
+                Elf32_Rel *rel = (Elf32_Rel *) p;
+                Elf32_Word *offset = v2v(rel->r_offset);
+                Elf32_Word sym = ELF32_R_SYM(rel->r_info);
+                Elf32_Word type = ELF32_R_TYPE(rel->r_info);
+                
+                if(type == R_ARM_RELATIVE) {
+                    // notice("Increasing %x which was %x -> %x", offset, *offset, (*offset + (Elf32_Word) reloc_base));
+                    *offset += (Elf32_Word) reloc_base;
+                } else {
+                    char *name = *strtab + (*symtab)[sym].st_name;
+                    void *S = getsym(name);
+                    if(!S) {
+                        notice("Could not find %s", name);
+                    }
+                    *offset = (uint32_t) S;
+                }
+
+                p += sh->sh_entsize;
+            }
+        }
+        free(sh);
+    }
+
+    do_patches();
+   
+    lseek(fd, ehdr.e_phoff, SEEK_SET);
+    phnum = ehdr.e_phnum;
+    while(phnum--) {
+        Elf32_Phdr *ph = (Elf32_Phdr *) malloc(ehdr.e_phentsize);
+        xread(fd, ph, ehdr.e_phentsize);
+        if(ph->p_memsz != 0 && ph->p_align == 0x1000) {
+            int prot = 0;
+            if(ph->p_flags & PF_R) prot |= PROT_READ;
+            if(ph->p_flags & PF_W) prot |= PROT_WRITE;
+            if(ph->p_flags & PF_X) prot |= PROT_EXEC;
+            int size = ph->p_memsz;
+            char *addr = v2v(ph->p_vaddr);
+            uint32_t diff = ((uint32_t)addr & 0xfff);
+            _assertZero(mprotect(addr - diff, size + diff, prot));
+        }
+        free(ph);
+    }
+
+    // Stubs away
+    _assertZero(mprotect(stubs_base, STUBS_SIZE, PROT_READ | PROT_EXEC));
+}
+
 extern void fds_init();
 extern void go(void *NP_Initialize_ptr, void *JNI_OnLoad_ptr);
     
@@ -198,154 +346,12 @@ int main(int argc, char **argv) {
 
     sandbox_me();
 
-
-    Elf32_Ehdr ehdr;
-    xread(fd, &ehdr, sizeof(ehdr));
-
-    _assert(ehdr.e_type == ET_DYN);
-    _assert(ehdr.e_machine == EM_ARM);
-
-    _assert(ehdr.e_phentsize >= sizeof(Elf32_Phdr));
-
-    size_t sz = 0;
-
-    lseek(fd, ehdr.e_phoff, SEEK_SET);
-    int phnum = ehdr.e_phnum;
-    while(phnum--) {
-        Elf32_Phdr *ph = (Elf32_Phdr *) malloc(ehdr.e_phentsize);
-        xread(fd, ph, ehdr.e_phentsize);
-        size_t sz_ = ph->p_vaddr + ph->p_memsz;
-        if(sz_ > sz) sz = sz_;
-        free(ph);
-    }
- 
-    sz = (sz + 0xfff) & ~0xfff;
-
-    reloc_base = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-    reloc_size = sz;
-    _assert(reloc_base != MAP_FAILED);
-
-    notice("--> reloc_base = %p", reloc_base);
-
-
-    lseek(fd, ehdr.e_phoff, SEEK_SET);
-    phnum = ehdr.e_phnum;
-    while(phnum--) {
-        Elf32_Phdr *ph = (Elf32_Phdr *) malloc(ehdr.e_phentsize);
-        xread(fd, ph, ehdr.e_phentsize);
-        notice("type:%x offset:%x vaddr:%x filesz:%x memsz:%x end:%x align:%x", (int)ph->p_type, ph->p_offset, ph->p_vaddr, ph->p_filesz, ph->p_memsz, ph->p_vaddr + ph->p_memsz, ph->p_align);
-        // Cheat
-        _assert(ph->p_filesz <= ph->p_memsz);
-        if(ph->p_filesz > 0) {
-            ssize_t br = pread(fd, v2v(ph->p_vaddr), ph->p_filesz, ph->p_offset);
-            _assert(ph->p_filesz == br);
-            /**** WTF.
-             * If I use mmap for those cases, pread acts very mysteriously.
-             * It hangs, but if I ctrl-c and cont in gdb, it then fails.
-             * I don't think it ought to?
-            if(ph->p_align != 0x1000) {
-            } else {
-                _assert((ph->p_vaddr & 0xfff) == (ph->p_offset & 0xfff));
-                void *ret = mmap(v2v(ph->p_vaddr & ~0xfff), ph->p_filesz, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FIXED, fd, ph->p_offset & ~0xfff);
-                _assert(ret != MAP_FAILED);
-            } */
-        }
-        free(ph);
-    }
-
-    _assert(ehdr.e_shentsize >= sizeof(Elf32_Shdr));
-    Elf32_Sym *symtab = NULL;
-    Elf32_Word symtab_size;
-    char *strtab = NULL;
-    Elf32_Word shstrtab = 0;
-
-    lseek(fd, ehdr.e_shoff, SEEK_SET);
-    int shnum = ehdr.e_shnum;
-    while(shnum--) {
-        Elf32_Shdr *sh = (Elf32_Shdr *) malloc(ehdr.e_shentsize);
-        xread(fd, sh, ehdr.e_shentsize);
-        if(sh->sh_type == SHT_DYNSYM) {
-            symtab = v2v(sh->sh_addr);
-            symtab_size = sh->sh_size;
-        } else if(sh->sh_type == SHT_STRTAB) {
-            if(strtab) {
-                shstrtab = sh->sh_offset;
-            } else {
-                strtab = v2v(sh->sh_addr);
-            }
-        }
-        free(sh);
-    }
-
-    _assert(symtab);
-    _assert(strtab);
-    _assert(shstrtab);
-
-    void **init_array = NULL;
+    int symtab_size;
+    Elf32_Sym *symtab;
+    void **init_array;
     Elf32_Word init_array_size;
-
-    lseek(fd, ehdr.e_shoff, SEEK_SET);
-    shnum = ehdr.e_shnum;
-    while(shnum--) {
-        Elf32_Shdr *sh = (Elf32_Shdr *) malloc(ehdr.e_shentsize);
-        xread(fd, sh, ehdr.e_shentsize);
-        _assert(sh->sh_type != SHT_RELA);
-        char buf[12];
-        pread(fd, buf, 12, shstrtab + sh->sh_name);
-        if(!memcmp(buf, ".init_array", 12)) {
-            init_array = v2v(sh->sh_addr);
-            init_array_size = sh->sh_size;
-        }
-        if(sh->sh_type == SHT_REL) {
-            notice("SHT_REL");
-            void *base = v2v(sh->sh_addr);
-            char *p = (char *) base;
-            while(p - (char *) base < sh->sh_size) {
-                Elf32_Rel *rel = (Elf32_Rel *) p;
-                Elf32_Word *offset = v2v(rel->r_offset);
-                Elf32_Word sym = ELF32_R_SYM(rel->r_info);
-                Elf32_Word type = ELF32_R_TYPE(rel->r_info);
-                
-                if(type == R_ARM_RELATIVE) {
-                    // notice("Increasing %x which was %x -> %x", offset, *offset, (*offset + (Elf32_Word) reloc_base));
-                    *offset += (Elf32_Word) reloc_base;
-                } else {
-                    char *name = strtab + symtab[sym].st_name;
-                    void *S = getsym(name);
-                    if(!S) {
-                        notice("Could not find %s", name);
-                    }
-                    *offset = (uint32_t) S;
-                }
-
-                p += sh->sh_entsize;
-            }
-        }
-        free(sh);
-    }
-
-    do_patches();
-   
-    lseek(fd, ehdr.e_phoff, SEEK_SET);
-    phnum = ehdr.e_phnum;
-    while(phnum--) {
-        Elf32_Phdr *ph = (Elf32_Phdr *) malloc(ehdr.e_phentsize);
-        xread(fd, ph, ehdr.e_phentsize);
-        if(ph->p_memsz != 0 && ph->p_align == 0x1000) {
-            int prot = 0;
-            if(ph->p_flags & PF_R) prot |= PROT_READ;
-            if(ph->p_flags & PF_W) prot |= PROT_WRITE;
-            if(ph->p_flags & PF_X) prot |= PROT_EXEC;
-            int size = ph->p_memsz;
-            char *addr = v2v(ph->p_vaddr);
-            uint32_t diff = ((uint32_t)addr & 0xfff);
-            _assertZero(mprotect(addr - diff, size + diff, prot));
-        }
-        free(ph);
-    }
-
-    // Stubs away
-    _assertZero(mprotect(stubs_base, STUBS_SIZE, PROT_READ | PROT_EXEC));
+    char *strtab;
+    TIME(base_load_elf(fd, &symtab, &symtab_size, &init_array, &init_array_size, &strtab));
 
     // Call the init funcs
     _assert(init_array);

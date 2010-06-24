@@ -2,7 +2,7 @@
 > async set_sekrit(buf sekrit);
 
 > async use_surface(int name);
-> async display_sync();
+> async display_sync(int l, int t, int r, int b);
 > sync get_parameters(out buf params, out int params_count);
 > sync new_connection(stream_t stream, buf url, buf target, out buf url_abs);
 > sync get_window_object(out int obj);

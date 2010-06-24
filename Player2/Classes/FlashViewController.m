@@ -95,7 +95,7 @@
 	return nil;
 }
 
-- (void)displaySync {
+- (void)displaySyncInRect:(CGRect *)rect {
 	CGImageRef image = CGImageCreate(
 									 IOSurfaceGetWidth(sfc),
 									 IOSurfaceGetHeight(sfc),

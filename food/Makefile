@@ -1,7 +1,15 @@
 export SDK := /var/sdk
 
 all: food food_wrapper
-STUFF := -mthumb -g3 -Wreturn-type -Wall -DHAVE_MACOSX_IPC -DOS_PATH_SEPARATOR="'/'" -DHAVE_PTHREADS -DHAVE_POSIX_FILEMAP -DHAVE_LITTLE_ENDIAN -I. -I../rpc -I../utils -I../utils/libcutils -isysroot $(SDK) -arch armv7 -ffixed-r9 -Werror 
+
+STUFF = -mthumb -Wreturn-type -Wall -DHAVE_MACOSX_IPC -DOS_PATH_SEPARATOR="'/'" -DHAVE_PTHREADS -DHAVE_POSIX_FILEMAP -DHAVE_LITTLE_ENDIAN -I. -I../rpc -I../utils -I../utils/libcutils -isysroot $(SDK) -arch armv7 -ffixed-r9 -Werror -Wno-uninitialized -g3 -O2
+DEBUG = 1
+
+#ifeq "$(DEBUG)" "1"
+#STUFF += -g3
+#else
+#STUFF += -O2
+#endif
 
 %.o: %.cpp common.h ../rpc/food_rpc1.h
 	g++-4.2 $(STUFF) -c -o $@ $<

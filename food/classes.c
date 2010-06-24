@@ -191,7 +191,7 @@ jobject getAssetFileDescriptor(jclass cls, jvalue *a) {
     s(descriptor, "getLength[()J]", make_a(afdGetLength));
 
     int fd;
-    log("opening %@", astName);
+    notice("opening %@", astName);
     if(CFEqual(astName, CFSTR("oem.cfg"))) {
         fd = oemcfg_fd;
     } else {
@@ -351,7 +351,7 @@ void init_classes() {
 static IOSurfaceRef make_iosurface() {
     CFMutableDictionaryRef dict;
     int pitch = movie_w * 4;
-    int allocSize = pitch * movie_h + 64;
+    int allocSize = pitch * movie_h + 128;
     int bytesPerElement = 4;
     char pixelFormat[4] = {'A', 'R', 'G', 'B'};
 

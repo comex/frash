@@ -99,10 +99,11 @@
 - (void)useSurface:(IOSurfaceRef)sfc_ {
 	if(sfc) CFRelease(sfc);
 	sfc = sfc_;
+	self.layer.contents = (id) sfc;
 	
 }
 
-- (void)displaySync {
+- (void)displaySyncInRect:(CGRect *)rect {
 	if(!sfc || !IOSurfaceGetWidth(sfc)) return;
 /*	CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, IOSurfaceGetBaseAddress(sfc), IOSurfaceGetAllocSize(sfc), NULL);
 	CGImageRef image = CGImageCreate(
@@ -122,8 +123,12 @@
 	CFRelease(data);
 	self.layer.contents = (id) image;
  	CFRelease(image);*/
-	self.layer.contents = (id) sfc;
-	self.layer.opacity = self.layer.opacity == 1.0 ? 0.9999 : 1.0;
+	//self.layer.contents = (id) sfc;
+	if(rect->size.width) {
+		[self.layer setNeedsDisplayInRect:*rect];
+	} else {
+		[self.layer setNeedsDisplay];
+	}
 }
 
 - (NSDictionary *)paramsDict {

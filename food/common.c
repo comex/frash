@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <spawn.h>
@@ -219,3 +220,11 @@ void _abort_(const char *file, int line) {
     err("_abort() %s:%d", file, line);
     exit(1);
 }
+
+#if TIMING
+uint64_t getus() {
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    return ((uint64_t) tp.tv_sec) * 1000000 + (uint64_t) tp.tv_usec;
+}
+#endif

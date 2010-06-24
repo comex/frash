@@ -1,0 +1,10 @@
+Package: frash
+Architecture: armv7
+Name: frash
+Version: 0.00
+Priority: optional
+Description: All your base are belong to us?
+Homepage: http://github.com/comex/frash
+Maintainer: comex <comexk@gmail.com>
+Section: Utilities
+

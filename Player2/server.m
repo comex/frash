@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #include <unistd.h>
 #include <notify.h>
+#include <QuartzCore/QuartzCore.h>
 
 #define BORING 0
 #define FOOD_ROOT "/var/mobile/"
@@ -208,9 +209,10 @@ int use_surface(int rpc_fd, int surface) {
 	return 0;
 }
 
-int display_sync(int rpc_fd) {
+int display_sync(int rpc_fd, int l, int t, int r, int b) {
 	Server *self = get_server(rpc_fd);
-	[self->delegate performSelector:@selector(displaySync)];
+	CGRect rect = CGRectMake(l, t, r-l, b-t);
+	[self->delegate performSelector:@selector(displaySyncInRect:) withObject:(id)&rect];
 	return 0;
 }
 

@@ -53,7 +53,7 @@ struct NPFuckedUpVariant {
             int32_t whoknows1;
             int32_t whoknows2;
             int32_t whoknows3;
-        } intt;
+        } int_;
     };
 };
 
@@ -169,10 +169,20 @@ bool idproxyInvoke(NPObject *obj, NPIdentifier name, const NPVariant *args, uint
     struct IDProxyObject *obj_ = (void *) obj;
     int prop;
     int *args_ = malloc(argCount * sizeof(int));
-    _assert(argCount == 0);
-    /*int i; for(i = 0; i < argCount; i++) {
-        NPFuckedUpVariant * 
-    }*/
+    int i; for(i = 0; i < argCount; i++) {
+        const struct NPFuckedUpVariant *arg = &(((const struct NPFuckedUpVariant *) args)[i]);
+        int arg_;
+        switch(arg->type) {
+        case NPVariantType_String:
+            assert(!get_string_object(food, (void *) arg->string.value.UTF8Characters, arg->string.value.UTF8Length, &arg_));
+            break;
+        case NPVariantType_Int32:
+        case NPVariantType_Object:
+        default:
+            log("called with unhandled argument type");
+            abort();
+        }
+    }
     _assertZero(invoke_object_property(food, obj_->id, (void *) CFDataGetBytePtr(name), CFDataGetLength(name), args_, argCount * sizeof(int), &prop));
     free(args_);
     if(prop) {
@@ -528,7 +538,7 @@ void go(NP_InitializeFuncPtr NP_Initialize_ptr, void *JNI_OnLoad_ptr_) {
         parameters += strlen(k) + 1;
         char *v = parameters;
         parameters += strlen(v) + 1;
-        log("%s -> %s\n", k, v);
+        log("%s -> %s", k, v);
         if(strcmp(k, "salign")) {
             argn[real_count] = k;
             argv[real_count++] = v;
