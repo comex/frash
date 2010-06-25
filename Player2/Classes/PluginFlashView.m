@@ -30,15 +30,16 @@
 
 
 - (void)webPlugInStop {
+	if(!on) { started = false; return; }
 	if(sfc) {
 		CFRelease(sfc);
 		sfc = NULL;
 	}
 	[self.server teardown];
-	if(label) {
-		[label removeFromSuperview];
-		[label release];
-		label = nil;
+	if(errorLabel) {
+		[errorLabel removeFromSuperview];
+		[errorLabel release];
+		errorLabel = nil;
 	}
 	self.layer.contents = nil;
 	rpcfd = 0;
@@ -46,6 +47,7 @@
 
 
 - (void)webPlugInStart {
+	if(!on) { started = true; return; }
 	NSLog(@"webPlugInStart");
 	[self webPlugInStop];	
 	self.server = [[[Server alloc] initWithDelegate:self] autorelease];
@@ -53,10 +55,64 @@
 	[self setSizeIfNecessary];	
 }
 
+- (BOOL)isOn {
+	return on;
+}
+
+- (void)initialClicked {
+	if(on) return;
+	initialButton.userInteractionEnabled = NO;
+	[UIView beginAnimations:nil context:nil];
+	[UIView setAnimationDuration:0.15];
+	[UIView setAnimationDelegate:self];
+	[UIView setAnimationDidStopSelector:@selector(animationDidStop:finished:context:)];
+	initialButton.alpha	= 0;
+	[UIView commitAnimations];
+	on = true;
+	if(started) [self webPlugInStart];
+}
+
+
+- (void)animationDidStop:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context {
+	[initialButton removeFromSuperview];
+	[initialButton release];
+	initialButton = nil;
+}
+
+- (void)initialDown {
+	initialButton.backgroundColor = [UIColor colorWithWhite:(0x93/256.0) alpha:1.0];
+}
+
+- (void)initialUp {
+	initialButton.backgroundColor = [UIColor colorWithWhite:(0xc3/256.0) alpha:1.0];
+}
 
 - (id)initWithArguments:(NSDictionary *)arguments_ {
 	if(self = [super init]) {
 		arguments = [arguments_ retain];
+		id attributes = [arguments objectForKey:@"WebPlugInAttributesKey"];
+		id w = [attributes objectForKey:@"width"];
+		id h = [attributes objectForKey:@"height"];
+		if(w && h) {
+			int w_ = [w intValue];
+			int h_ = [h intValue];
+			if(w_ < 30 || h_ < 30) {
+				on = true;
+				return self;
+			}
+		}
+		initialButton = [[UIButton alloc] initWithFrame:self.frame];
+		initialButton.backgroundColor = [UIColor colorWithWhite:(0xc3/256.0) alpha:1.0];
+		[initialButton setTitleColor:[UIColor colorWithWhite:(0x3c/256.0) alpha:1.0] forState:UIControlStateNormal];
+		[initialButton setTitleShadowColor:[UIColor colorWithWhite:1.0 alpha:0.53] forState:UIControlStateNormal];
+		initialButton.titleLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+		[initialButton setTitle:@"Flash" forState:UIControlStateNormal];
+		initialButton.reversesTitleShadowWhenHighlighted = YES;
+		initialButton.hidden = NO;
+		[initialButton addTarget:self action:@selector(initialClicked) forControlEvents:UIControlEventTouchUpInside];
+		[initialButton addTarget:self action:@selector(initialDown) forControlEvents:UIControlEventTouchDown];
+		[initialButton addTarget:self action:@selector(initialUp) forControlEvents:UIControlEventTouchUpOutside];
+		[self addSubview:initialButton];
 		//self.contentMode = UIViewContentModeRedraw;		
 		//self.backgroundColor = [UIColor grayColor];
 	}
@@ -65,9 +121,10 @@
 
 - (void)setFrame:(CGRect)frame {
 	[super setFrame:frame];
-	NSLog(@"Frame changed");
+	NSLog(@"Frame changed (now %fx%f)", frame.size.width, frame.size.height);
 	[self setSizeIfNecessary];
-	label.frame = self.bounds;	
+	initialButton.frame = self.bounds;
+	errorLabel.frame = self.bounds;	
 }
 
 + (UIView *)plugInViewWithArguments:(NSDictionary *)arguments
@@ -142,22 +199,21 @@
 
 - (void)diedWithError:(NSString *)error {
 	NSLog(@"Error: %@", error);
-	if(label) { [label removeFromSuperview]; [label release]; }
-	label = [[UILabel alloc] init];
-	label.backgroundColor = [UIColor colorWithWhite:0.5 alpha:0.3]; // dim the image
-	label.text = error;		
-	label.frame = self.bounds;
-	label.textAlignment = UITextAlignmentCenter;
-	label.textColor = [UIColor whiteColor];
-	//label.shadowColor = [UIColor whiteColor];
-	//label.shadowOffset = CGSizeMake(0, 1);
-	[self addSubview:label];
+	if(errorLabel) { [errorLabel removeFromSuperview]; [errorLabel release]; }
+	errorLabel = [[UILabel alloc] init];
+	errorLabel.backgroundColor = [UIColor colorWithWhite:0.5 alpha:0.3]; // dim the image
+	errorLabel.text = error;		
+	errorLabel.frame = self.bounds;
+	errorLabel.textAlignment = UITextAlignmentCenter;
+	errorLabel.textColor = [UIColor whiteColor];
+	[self addSubview:errorLabel];
 }
 
 
 - (void)dealloc {
 	[arguments release];
-	[label release];
+	[initialButton release];	
+	[errorLabel release];
 	if(sfc) CFRelease(sfc);
 	[self.server teardown];
     [super dealloc];

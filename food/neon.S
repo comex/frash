@@ -2,6 +2,8 @@
 .globl _rgba_bgra_copy
 .thumb_func
 _rgba_bgra_copy:
+    pld [r1, #32]
+
     vld4.u8 {d0[0], d1[0], d2[0], d3[0]}, [r1]!
     vld4.u8 {d0[1], d1[1], d2[1], d3[1]}, [r1]!
     vld4.u8 {d0[2], d1[2], d2[2], d3[2]}, [r1]!

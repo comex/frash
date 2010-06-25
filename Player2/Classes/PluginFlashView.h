@@ -13,11 +13,14 @@
 
 @interface PluginFlashView : UIView {
 	NSDictionary *arguments;
-	UILabel *label;
+	BOOL on, started;	
+	UIButton *initialButton;
+	UILabel *errorLabel;
 	
 	IOSurfaceRef sfc;
 	int rpcfd;
 	Server *server;
+	
 }
 @property (retain) Server *server;
 

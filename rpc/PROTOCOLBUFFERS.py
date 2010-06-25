@@ -377,12 +377,14 @@ struct rpcserve_info {
 
 struct rpcctx_info {
     pthread_mutex_t mut;
+    pthread_mutex_t bigmut; // So that the context is not destroyed before rpcctx_perform is done
     CFMutableArrayRef messages;
     int rpcfd;
 };
 
 void rpcctx_perform(void *info_) {
     struct rpcctx_info *info = info_;
+    pthread_mutex_lock(&info->bigmut);
     int rpcfd = info->rpcfd;
     while(1) {
         pthread_mutex_lock(&info->mut);
@@ -397,8 +399,10 @@ void rpcctx_perform(void *info_) {
         switch(msg_->funcid_or_status) {
             SERVER
         }
+        pthread_mutex_destroy(&info->mut);
         free(msg_);
     }
+    pthread_mutex_unlock(&info->bigmut);
 }
 
 struct rpcerrctx_info {
@@ -413,6 +417,7 @@ void rpcerrctx_perform(void *info_) {
     CFRunLoopSourceInvalidate(info->src);
     CFRelease(info->src);
     info->error(info->rpcfd, info->ret);
+
     free(info);
 }
 
@@ -430,6 +435,7 @@ void *rpcserve_thread(void *info_) {
     ctx.perform = rpcctx_perform;
 
     pthread_mutex_init(&rpcinfo->mut, NULL);
+    pthread_mutex_init(&rpcinfo->bigmut, NULL);
     rpcinfo->rpcfd = info->rpcfd;
     rpcinfo->messages = CFArrayCreateMutable(NULL, 0, NULL);
 
@@ -438,7 +444,6 @@ void *rpcserve_thread(void *info_) {
 
 
     int ret = rpcserve_thread_(info->rpcfd, asrc, &rpcinfo->mut, rpcinfo->messages);
-    
     
     CFRunLoopSourceInvalidate(asrc);
     CFRelease(asrc);
@@ -463,6 +468,9 @@ void *rpcserve_thread(void *info_) {
         CFRunLoopSourceSignal(src);
         CFRunLoopWakeUp(CFRunLoopGetMain());
     }
+    pthread_mutex_lock(&rpcinfo->bigmut);
+    pthread_mutex_unlock(&rpcinfo->bigmut);
+    pthread_mutex_destroy(&rpcinfo->bigmut);
     pthread_mutex_destroy(&rpcinfo->mut);
     CFRelease(rpcinfo->messages);
     free(rpcinfo);

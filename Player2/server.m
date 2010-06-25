@@ -320,6 +320,7 @@ int get_string_value(int rpc_fd, int obj, bool *valid, void **value, size_t *val
 
 int get_object_property(int rpc_fd, int obj, void *property, size_t property_len, int *obj2) {
 	Server *self = get_server(rpc_fd);	
+	if(![self->delegate performSelector:@selector(isOn)]) return 1;	
 	NSString *str = [[NSString alloc] initWithBytes:property length:property_len encoding:NSUTF8StringEncoding];
 	id base = [self objectForName:obj];
 	id prop = [base valueForKey:str];
@@ -344,7 +345,8 @@ int get_int_object(int rpc_fd, int theint, int *obj2) {
 
 
 int invoke_object_property(int rpc_fd, int obj, void *property, size_t property_len, void *args, size_t args_len, int *obj2) {
-	Server *self = get_server(rpc_fd);			
+	Server *self = get_server(rpc_fd);
+	if(![self->delegate performSelector:@selector(isOn)]) return 1;
 	NSString *str = [[NSString alloc] initWithBytes:property length:property_len encoding:NSUTF8StringEncoding];
 	free(property);
 	id base = [self objectForName:obj];
@@ -378,6 +380,7 @@ int invoke_object_property(int rpc_fd, int obj, void *property, size_t property_
 
 int get_window_object(int rpc_fd, int *obj) {
 	Server *self = get_server(rpc_fd);
+	if(![self->delegate performSelector:@selector(isOn)]) return 1;	
 	id windowObject = [self->delegate performSelector:@selector(getWindowObject)]; // windowScriptObject
 	*obj = [self nameForObject:windowObject];
 	NSLog(@"Getting window object %@ -> %d", windowObject, *obj);
