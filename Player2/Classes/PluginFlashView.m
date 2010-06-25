@@ -180,8 +180,8 @@
 	CFRelease(data);
 	self.layer.contents = (id) image;
  	CFRelease(image);*/
-	//self.layer.opacity = self.layer.opacity == 1.000 ? 0.9999 : 1.000;
-	[self.layer performSelector:@selector(setContentsChanged)];
+	self.layer.opacity = self.layer.opacity == 1.000 ? 0.9999 : 1.000;
+	//[self.layer performSelector:@selector(setContentsChanged)];
 	/*if(rect->size.width) {
 		[self.layer setNeedsDisplayInRect:*rect];
 	} else {
