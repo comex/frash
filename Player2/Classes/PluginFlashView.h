@@ -13,9 +13,12 @@
 
 @interface PluginFlashView : UIView {
 	NSDictionary *arguments;
-	BOOL on, started;	
+	BOOL on, started;
 	UIButton *initialButton;
 	UILabel *errorLabel;
+	
+	BOOL oldFrameValid;
+	CGRect oldFrame;
 	
 	IOSurfaceRef sfc;
 	int rpcfd;

@@ -47,7 +47,7 @@
 
 
 - (void)webPlugInStart {
-	if(!on) { started = true; return; }
+	if(!on) { started = YES; return; }
 	NSLog(@"webPlugInStart");
 	[self webPlugInStop];	
 	self.server = [[[Server alloc] initWithDelegate:self] autorelease];
@@ -68,7 +68,7 @@
 	[UIView setAnimationDidStopSelector:@selector(animationDidStop:finished:context:)];
 	initialButton.alpha	= 0;
 	[UIView commitAnimations];
-	on = true;
+	on = YES;
 	if(started) [self webPlugInStart];
 }
 
@@ -97,7 +97,7 @@
 			int w_ = [w intValue];
 			int h_ = [h intValue];
 			if(w_ < 30 || h_ < 30) {
-				on = true;
+				on = YES;
 				return self;
 			}
 		}
@@ -121,6 +121,13 @@
 
 - (void)setFrame:(CGRect)frame {
 	[super setFrame:frame];
+	// For some reason, the frame is constantly fluctating to +/-1 height.
+	oldFrame = frame;
+	oldFrameValid = YES;	
+	if(oldFrameValid && fabsf(frame.size.height - oldFrame.size.height) < 1.5
+					 && fabsf(frame.size.width - oldFrame.size.width) < 1.5) {
+		return;
+	}
 	NSLog(@"Frame changed (now %fx%f)", frame.size.width, frame.size.height);
 	[self setSizeIfNecessary];
 	initialButton.frame = self.bounds;

@@ -72,8 +72,8 @@ public:
 private:
     size_t _range_offset, _range_length;
 };
-MediaBuffer::MediaBuffer(unsigned int x) {
-    fprintf(stderr, "MediaBuffer(%d)\n", x);
+MediaBuffer::MediaBuffer(size_t size) {
+    fprintf(stderr, "MediaBuffer(%d)\n", size);
     _range_offset = _range_length = 0;
 }
 void MediaBuffer::release() {
