@@ -61,7 +61,7 @@ bool MetaData::setCString(unsigned int, const char *) {
 
 class MediaBuffer {
 public:
-    MediaBuffer(unsigned int);
+    MediaBuffer(size_t);
     void release();
     sp<MetaData> meta_data();
     void *data() const;
@@ -73,7 +73,7 @@ private:
     size_t _range_offset, _range_length;
 };
 MediaBuffer::MediaBuffer(size_t size) {
-    fprintf(stderr, "MediaBuffer(%d)\n", size);
+    fprintf(stderr, "MediaBuffer(%zd)\n", size);
     _range_offset = _range_length = 0;
 }
 void MediaBuffer::release() {
