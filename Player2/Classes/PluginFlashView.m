@@ -96,6 +96,7 @@
 		if(w && h) {
 			int w_ = [w intValue];
 			int h_ = [h intValue];
+			self.frame = CGRectMake (self.frame.origin.x, self.frame.origin.y, [w floatValue], [h floatValue]);
 			if(w_ < 30 || h_ < 30) {
 				on = YES;
 				return self;
