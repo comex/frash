@@ -13,6 +13,8 @@
 
 (allow system-socket)
 
+(allow file-ioctl)
+
 (allow file-read*
     (regex #"/usr/lib(/|$)")
     (regex #"/usr/share(/|$)")
@@ -21,6 +23,7 @@
     (regex #"/private/var/Managed Preferences/mobile(/|$)")
     (regex #"/private/var/mobile$")
     (regex #"/private/var/mobile/Library/Preferences/\.GlobalPreferences\.plist")
+    (regex #"/dev/urandom")
     (regex #"/var$")
     (regex #"/var/stash.*icu[^/]*\.dat$")
     (regex #"/private/var/db/timezone(/|$)")
