@@ -1,6 +1,6 @@
 ewww, I know.
 
-To actually run it, you'll need libflashplayer.so from Android.
+To actually run it, you'll need libflashplayer.so from Android. (You must get the armeabi variant, not armeabi-v7a)
 
 Build instructions:
 (do http://networkpx.blogspot.com/2009/09/compiling-iphoneos-31-apps-with-xcode.html but use my version of ldid2)
