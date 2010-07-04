@@ -16,6 +16,7 @@
 	CGImageRef oldContents;
 	int rpcfd;
 	Server *server;
+	CGDataProviderRef provider;
 }
 @property (retain) Server *server;
 - (void)useSurface:(IOSurfaceRef)sfc;
