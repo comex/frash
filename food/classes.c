@@ -314,6 +314,7 @@ void init_classes() {
 
     dict pmcls = named_dict("WindowManager");
     s(pmcls, "SCREEN_DIM_WAKE_LOCK[I]", intToTypeRef(6));
+    s(pmcls, "SCREEN_BRIGHT_WAKE_LOCK[I]", intToTypeRef(6));
     s(classes, "android/view/PowerManager", pmcls);
 
     dict wlcls = named_dict("WakeLock");
