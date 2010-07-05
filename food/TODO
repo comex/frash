@@ -2,5 +2,6 @@
 - keyboard!
 - invocation arguments
 - make it think it's fullscreen or otherwise fix mouse
-- video?
 - overzoom
+- missing npfunctions (NPN_PostURLNotify)
+- Figure out bad canvas_impl (CRAP error)
