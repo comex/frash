@@ -395,6 +395,26 @@ int connection_all_done(int rpcfd, NPStream *stream, bool successful) {
     return 0;
 }
 
+NPError NPN_PostURLNotify(NPP    instance,
+                         const  char* url,
+                         const  char* target,
+                         uint32      len,
+                         const char* buf,
+                         NPBool      file,
+                         void*   notifyData) {
+    NPStream *stream = malloc(sizeof(NPStream));
+    stream->pdata = NULL;
+    stream->ndata = NULL;
+    stream->end = 0;
+    stream->lastmodified = 0;
+    stream->notifyData = notifyData;
+    stream->headers = NULL;
+    if(!target) target = "";
+    log("PostURLNotify: [%s] [%s] (stream=%p)", url, target, stream);
+    _assertZero(new_post_connection (food, stream, (char *) url, strlen(url), (char *) target, strlen(target), file, (char *) buf, len, (void **) &stream->url, NULL));
+    return 0;
+}
+
 NPError NPN_GetURLNotify(NPP    instance,
                          const  char* url, 
                          const  char* target,
@@ -408,7 +428,7 @@ NPError NPN_GetURLNotify(NPP    instance,
     stream->headers = NULL;
     if(!target) target = "";
     log("GetURLNotify: [%s] [%s] (stream=%p)", url, target, stream);
-    _assertZero(new_connection(food, stream, (char *) url, strlen(url), (char *) target, strlen(target), (void **) &stream->url, NULL));
+    _assertZero(new_get_connection(food, stream, (char *) url, strlen(url), (char *) target, strlen(target), (void **) &stream->url, NULL));
     return 0;
 }
 
@@ -495,6 +515,7 @@ static void init_funcs() {
     funcs.getproperty = stub(NPN_GetProperty);
     funcs.releasevariantvalue = stub(NPN_ReleaseVariantValue);
     funcs.geturlnotify = stub(NPN_GetURLNotify);
+    funcs.posturlnotify = stub(NPN_PostURLNotify);
     funcs.scheduletimer = stub(NPN_ScheduleTimer);
     funcs.unscheduletimer = stub(NPN_UnscheduleTimer);
     funcs.evaluate = stub(NPN_Evaluate);

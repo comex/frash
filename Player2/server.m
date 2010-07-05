@@ -18,6 +18,7 @@
 #include "server.h"
 #import <Foundation/Foundation.h>
 #include <unistd.h>
+#undef __BLOCKS__
 #include <notify.h>
 #include <QuartzCore/QuartzCore.h>
 
@@ -38,16 +39,21 @@ static Server *get_server(int rpc_fd) {
 	stream_t stream;
 	int rpc_fd;
 	NSURLConnection *connection;
-	NSURLRequest *request;
+	NSMutableURLRequest *request;
 	BOOL shouldKeepRunning;
 }
+
+@property (readonly) NSMutableURLRequest *request;
+
 @end
 @implementation URLDude
+
+@synthesize request;
 - (id)initWithStream:(stream_t)stream_ URL:(NSURL *)url rpc_fd:(int)rpc_fd_ {
 	if(self = [super init]) {
 		stream = stream_;
 		rpc_fd = rpc_fd_;
-		request = [[NSURLRequest alloc] initWithURL:url];
+		request = [[NSMutableURLRequest alloc] initWithURL:url];
 		
 	}
 	return self;
@@ -65,7 +71,7 @@ static Server *get_server(int rpc_fd) {
 		connection_all_done(rpc_fd, stream, false);
 		return;
 	} else {
-		NSLog(@"FYI I made a connection %@", connection);		
+		NSLog(@"FYI I made a connection %@", connection);
 		NSRunLoop *theRL = [NSRunLoop currentRunLoop];
 		shouldKeepRunning = YES;
 		while (shouldKeepRunning && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
@@ -111,12 +117,12 @@ static Server *get_server(int rpc_fd) {
 
 
 static void error(int rpc_fd, int err) {
-	Server *self = get_server(rpc_fd);	
+	Server *self = get_server(rpc_fd);
 	NSString *str;
 	if(err == 0) {
 		str = [NSString stringWithFormat:@"Unexpected error"];
 	} else if(err < 0) {
-		str = [NSString stringWithFormat:@"Socket error: %s", strerror(-err)];		
+		str = [NSString stringWithFormat:@"Socket error: %s", strerror(-err)];
 	} else {
 		str = [NSString stringWithFormat:@"Internal error: %d", err];
 	}
@@ -154,7 +160,7 @@ static void error(int rpc_fd, int err) {
 	}
 	int big = 120000;
 	assert(!setsockopt(rpc_fd, SOL_SOCKET, SO_SNDBUF, &big, sizeof(big)));
-	assert(!setsockopt(rpc_fd, SOL_SOCKET, SO_RCVBUF, &big, sizeof(big)));	
+	assert(!setsockopt(rpc_fd, SOL_SOCKET, SO_RCVBUF, &big, sizeof(big)));
 	signal(SIGPIPE, SIG_IGN);
 	rpcserve(rpc_fd, error);
 	
@@ -175,7 +181,7 @@ static void error(int rpc_fd, int err) {
 	}
 	
 	if(rpc_source) {
-		CFRunLoopRemoveSource(CFRunLoopGetMain(), rpc_source, kCFRunLoopCommonModes);	
+		CFRunLoopRemoveSource(CFRunLoopGetMain(), rpc_source, kCFRunLoopCommonModes);
 		rpc_source = NULL;
 	}
 	if(rpc_fd) {
@@ -198,20 +204,20 @@ static void error(int rpc_fd, int err) {
 
 int set_sekrit(int rpc_fd, void *sekrit_, size_t sekrit_len) {
 	Server *self = get_server(rpc_fd);
-	NSLog(@"sekrit: %s", sekrit_);	
+	NSLog(@"sekrit: %s", sekrit_);
 	if(!self->sekrit) self->sekrit = sekrit_;
 	return 0;
 }
 
 int abort_msg(int rpc_fd, void *message, size_t message_len) {
 	Server *self = get_server(rpc_fd);
-	NSString *str = [[[NSString alloc] initWithBytes:message length:message_len encoding:NSUTF8StringEncoding] autorelease];		
+	NSString *str = [[[NSString alloc] initWithBytes:message length:message_len encoding:NSUTF8StringEncoding] autorelease];
 	[self dieWithError:str];
 	return 0;
 }
 
 int use_surface(int rpc_fd, int surface) {
-	Server *self = get_server(rpc_fd);	
+	Server *self = get_server(rpc_fd);
 	IOSurfaceRef sfc = IOSurfaceLookup(surface);
 	if(!sfc) return 1;
 	[self->delegate performSelector:@selector(useSurface:) withObject:(id)sfc];
@@ -225,16 +231,41 @@ int display_sync(int rpc_fd, int l, int t, int r, int b) {
 	return 0;
 }
 
-int new_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len, void **url_abs, size_t *url_abs_len) {
+int new_post_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len, bool isfile, void *buf, size_t buf_len, void **url_abs, size_t *url_abs_len) {
 	Server *self = get_server(rpc_fd);
-	NSString *str = [[[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding] autorelease];	
+	NSString *str = [[[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding] autorelease];
+	NSURL *nsurl = [NSURL URLWithString:str relativeToURL:[self->delegate baseURL]];
+
+	NSLog(@"posting %i bytes to %s", buf_len, (char *)url);
+	if(target_len > 0) {
+		// This is even more wrong for posts, what should we do here?
+		NSLog(@"new_post_connection: with target %s -- ignoring", target);
+	}
+	
+	NSString *abs = [nsurl absoluteString];
+	NSData *data = [abs dataUsingEncoding:NSUTF8StringEncoding];
+	*url_abs = (void *) [data bytes];
+	*url_abs_len = [data length];
+	URLDude *dude = [[URLDude alloc] initWithStream:stream URL:nsurl rpc_fd:rpc_fd];
+	[dude.request setHTTPMethod:@"POST"];
+	[dude.request setHTTPBody:[NSData dataWithContentsOfFile:[[[NSString alloc] initWithBytes:buf length:buf_len encoding:NSUTF8StringEncoding] autorelease]]];
+	[dude start];
+	[dude autorelease];
+	free(target);
+	free(url);
+	return 0;
+}
+
+int new_get_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len, void **url_abs, size_t *url_abs_len) {
+	Server *self = get_server(rpc_fd);
+	NSString *str = [[[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding] autorelease];
 	NSURL *nsurl = [NSURL URLWithString:str
-						  relativeToURL:[self->delegate baseURL]];	
+						  relativeToURL:[self->delegate baseURL]];
 	if(target_len > 0) {
 		// This is wrong.
 		NSLog(@"new_connection with target %s", target);
 		
-		NSString *str2 = [[[NSString alloc] initWithBytes:target length:target_len encoding:NSUTF8StringEncoding] autorelease];		
+		NSString *str2 = [[[NSString alloc] initWithBytes:target length:target_len encoding:NSUTF8StringEncoding] autorelease];
 		[self->delegate performSelector:@selector(goToURL:inFrame:) withObject:nsurl withObject:str2];
 		*url_abs = url;
 		*url_abs_len = url_len;
@@ -257,7 +288,9 @@ int new_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void 
 	NSData *data = [abs dataUsingEncoding:NSUTF8StringEncoding];
 	*url_abs = (void *) [data bytes];
 	*url_abs_len = [data length];
-	[[[[URLDude alloc] initWithStream:stream URL:nsurl rpc_fd:rpc_fd] autorelease] start];
+	URLDude *dude = [[URLDude alloc] initWithStream:stream URL:nsurl rpc_fd:rpc_fd];
+	[dude start];
+	[dude autorelease];
 	free(target);
 	free(url);
 	return 0;
@@ -265,7 +298,7 @@ int new_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void 
 	 
 int get_parameters(int rpc_fd, void **params, size_t *params_len, int *params_count) {
 	NSLog(@"GET_PARAMETERS");
-	Server *self = get_server(rpc_fd);	
+	Server *self = get_server(rpc_fd);
 	NSDictionary *dict = [self->delegate performSelector:@selector(paramsDict)];
 	
 	*params_count = [dict count];
@@ -275,7 +308,7 @@ int get_parameters(int rpc_fd, void **params, size_t *params_len, int *params_co
 		[data appendData:[key dataUsingEncoding:NSUTF8StringEncoding]];
 		[data appendData:nullo];
 		[data appendData:[[dict objectForKey:key] dataUsingEncoding:NSUTF8StringEncoding]];
-		[data appendData:nullo];		
+		[data appendData:nullo];
 	}
 	
 	*params = (void *) [data bytes];
@@ -303,9 +336,9 @@ int get_parameters(int rpc_fd, void **params, size_t *params_len, int *params_co
 }
 
 int get_string_value(int rpc_fd, int obj, bool *valid, void **value, size_t *value_len) {
-	Server *self = get_server(rpc_fd);	
+	Server *self = get_server(rpc_fd);
 	NSString *str = [self objectForName:obj];
-	NSLog(@"get_string_value %@", str);	
+	NSLog(@"get_string_value %@", str);
 	if([str isKindOfClass:[NSString class]]) {
 		*valid = true;
 		NSData *data = [str dataUsingEncoding:NSUTF8StringEncoding];
@@ -319,8 +352,8 @@ int get_string_value(int rpc_fd, int obj, bool *valid, void **value, size_t *val
 }
 
 int get_object_property(int rpc_fd, int obj, void *property, size_t property_len, int *obj2) {
-	Server *self = get_server(rpc_fd);	
-	if(![self->delegate performSelector:@selector(isOn)]) return 1;	
+	Server *self = get_server(rpc_fd);
+	if(![self->delegate performSelector:@selector(isOn)]) return 1;
 	NSString *str = [[NSString alloc] initWithBytes:property length:property_len encoding:NSUTF8StringEncoding];
 	id base = [self objectForName:obj];
 	id prop = [base valueForKey:str];
@@ -332,13 +365,13 @@ int get_object_property(int rpc_fd, int obj, void *property, size_t property_len
 }
 
 int get_string_object(int rpc_fd, void *string, size_t string_len, int *obj2) {
-	Server *self = get_server(rpc_fd);		
+	Server *self = get_server(rpc_fd);
 	*obj2 = [self nameForObject:[[[NSString alloc] initWithBytes:string length:string_len encoding:NSUTF8StringEncoding] autorelease]];
 	return 0;
 }
 
 int get_int_object(int rpc_fd, int theint, int *obj2) {
-	Server *self = get_server(rpc_fd);		
+	Server *self = get_server(rpc_fd);
 	*obj2 = [self nameForObject:[NSNumber numberWithInt:theint]];
 	return 0;
 }
@@ -371,16 +404,17 @@ int invoke_object_property(int rpc_fd, int obj, void *property, size_t property_
 		NSLog(@"Invocation returned undefined");
 		ret = nil;
 	}*/
-	NSLog(@"%@[%@](%@) = %@", base, str, array, ret);	
-	[str release];	
+	NSLog(@"%@[%@](%@) = %@", base, str, array, ret);
+	[str release];
 	*obj2 = [self nameForObject:ret];
 	return 0;
 	
 }
 
 int get_window_object(int rpc_fd, int *obj) {
+	NSLog(@"Getting window object");
 	Server *self = get_server(rpc_fd);
-	if(![self->delegate performSelector:@selector(isOn)]) return 1;	
+	if(![self->delegate performSelector:@selector(isOn)]) return 1;
 	id windowObject = [self->delegate performSelector:@selector(getWindowObject)]; // windowScriptObject
 	*obj = [self nameForObject:windowObject];
 	NSLog(@"Getting window object %@ -> %d", windowObject, *obj);
@@ -389,7 +423,7 @@ int get_window_object(int rpc_fd, int *obj) {
 
 int evaluate_web_script(int rpc_fd, void *script, size_t script_len, int *obj) {
 	Server *self = get_server(rpc_fd);
-	NSString *str = [[NSString alloc] initWithBytes:script length:script_len encoding:NSUTF8StringEncoding];	
+	NSString *str = [[NSString alloc] initWithBytes:script length:script_len encoding:NSUTF8StringEncoding];
 	id resultObject = [self->delegate performSelector:@selector(evaluateWebScript:) withObject:str];
 	*obj = [self nameForObject:resultObject];
 	[str release];
