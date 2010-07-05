@@ -546,7 +546,7 @@ void go(NP_InitializeFuncPtr NP_Initialize_ptr, void *JNI_OnLoad_ptr_) {
             argn[real_count] = k;
             argv[real_count++] = v;
         }
-        if(!strcmp(k, "src")) {
+        if(!strcmp(k, "src") || !strcmp(k, "movie")) {
             src = v;
         }
     }

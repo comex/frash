@@ -35,6 +35,7 @@
 #include <getopt.h>
 #include <signal.h>
 #include <netdb.h>
+#undef __BLOCKS__
 #include <notify.h>
 
 #include "launch.h"
