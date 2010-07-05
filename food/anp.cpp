@@ -851,8 +851,7 @@ struct ANPCanvas {
 
 ANPCanvas*  canvas_impl_newCanvas(ANPBitmap *bitmap) {
     ANPCanvas *result = new ANPCanvas;
-    notice("width:%d height:%d baseAddr:%p rowBytes:%d format:%d", bitmap->width, bitmap->height, bitmap->baseAddr, bitmap->rowBytes, bitmap->format);
-    
+    notice("bitmap: %p width:%d height:%d baseAddr:%p rowBytes:%d format:%d", bitmap, bitmap->width, bitmap->height, bitmap->baseAddr, bitmap->rowBytes, bitmap->format);
     
     //_assert(bitmap->format == kRGBA_8888_ANPBitmapFormat);
     if(bitmap->format != kRGBA_8888_ANPBitmapFormat) {

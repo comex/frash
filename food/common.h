@@ -105,7 +105,7 @@ extern int movie_w, movie_h, pending_movie_w, pending_movie_h;
 #define logreal(fmt, args...)  logreal_(CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR(fmt), ##args)) 
 
 #define logx(level, args...) (LOG_LEVEL >= (level) ? (logreal(args)) : (void)0)
-#define LOG_LEVEL 1
+#define LOG_LEVEL 0
 #define warn(args...) logx(2, args)
 #define notice(args...) logx(3, args)
 #define log(args...) logx(1, args)

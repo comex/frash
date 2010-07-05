@@ -152,11 +152,11 @@ sp<OMXCodec> OMXCodec::Create(
 
 extern "C" {
 void *_Znwj(unsigned int a) {
-    fprintf(stderr, "operator new: %u\n", a);
+    //fprintf(stderr, "operator new: %u\n", a);
     return (operator new)((unsigned long)a);
 }
 void *_Znaj(unsigned int a) {
-    fprintf(stderr, "operator new[]: %u\n", a);
+    //fprintf(stderr, "operator new[]: %u\n", a);
     return (operator new[])((unsigned long)a);
 }
 }
