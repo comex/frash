@@ -103,7 +103,24 @@ void *stubify(void *addy, const char *id, bool needs_mprotect) {
     return ret;
 }
 
+/*
+ * Flash appears to try to fprintf to some FILE* handle in the sandbox
+ * which dies in flockfile, but I havn't been able to track down exactly
+ * where yet, and extending the sandbox doesn't seem to fix it? wtf.
+ * Lets do this lameness for now so youtube doesn't crash and muchmusic works
+ */
+int hook_fprintf(FILE *stream, const char *format, ...) {
+    fprintf(stderr, "DEBUG_HOOK: ");
+    va_list v;
+    va_start(v, format);
+    vfprintf(stderr, format, v);
+    va_end(v);
+
+    return 0;
+}
+
 static void *getsym(char *id) {
+    if(!strcmp(id, "fprintf")) id = "hook_fprintf";
     if(!strcmp(id, "__errno")) id = "__error";
     if(!strcmp(id, "mmap")) id = "rmmap"; 
     if(!strcmp(id, "mprotect")) id = "rmprotect"; 
