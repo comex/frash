@@ -1,6 +1,6 @@
 #!/bin/sh
  
-hasGTA=`expr "$*" : '.* -gta .*'`;
+hasGTA=1 #`expr "$*" : '.* -gta .*'`;
 objpath=${!#}`expr ${!#} : '.*\(/[^/]\{1,\}\)\.app$'`;
  
 if [[ $hasGTA == 0 ]]; then
