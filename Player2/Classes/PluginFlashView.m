@@ -276,10 +276,8 @@ foo(touchesCancelled, kCancel_ANPTouchAction)
 	CGFloat width = CGImageGetWidth(imgRef);
 	CGFloat height = CGImageGetHeight(imgRef);
 
-NSLog (@"SCALE: %fx%f CAP: %fx%f", width, height, maxWidth, maxHeight);
 	if (width <= maxWidth && height <= maxHeight)
 	{
-NSLog (@"SCALE: bail");
 		return image;
 	}
 
@@ -290,7 +288,6 @@ NSLog (@"SCALE: bail");
 	{
 		CGFloat ratio = width/height;
 
-NSLog (@"SCALE: ratio: %f", ratio);
 		if (ratio > 1)
 		{
 			bounds.size.width = maxWidth;
