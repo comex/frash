@@ -266,7 +266,6 @@ foo(touchesCancelled, kCancel_ANPTouchAction)
 	[frame loadRequest:[NSURLRequest requestWithURL:URL]];
 }
 
-<<<<<<< HEAD
 - (UIImage *)scaleImage:(UIImage *) image maxWidth:(float) maxWidth maxHeight:(float) maxHeight
 {
 	CGImageRef imgRef = image.CGImage;
@@ -312,7 +311,5 @@ foo(touchesCancelled, kCancel_ANPTouchAction)
 
 }
 
-=======
->>>>>>> 7933cb7... - Fix a few more sandbox issues
 @synthesize server;
 @end
