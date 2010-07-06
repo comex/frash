@@ -6,7 +6,9 @@
 (allow mach-lookup
     (global-name "com.apple.mediaserverd")
     (global-name "com.apple.audio.AudioQueueServer")
+    (global-name "com.apple.coremedia.admin")
     (global-name "com.apple.system.logger")
+    (global-name "com.apple.SystemConfiguration.configd")
     )
 
 (allow ipc-posix-shm)
@@ -14,6 +16,10 @@
 (allow system-socket)
 
 (allow file-ioctl)
+
+(allow file-read-metadata
+    (literal "/")
+    )
 
 (allow file-read*
     (regex #"/usr/lib(/|$)")
@@ -24,6 +30,7 @@
     (regex #"/private/var/mobile$")
     (regex #"/private/var/mobile/Library/Preferences/\.GlobalPreferences\.plist")
     (regex #"/dev/urandom")
+    (regex #"/etc(/|$)")
     (regex #"/var$")
     (regex #"/var/stash.*icu[^/]*\.dat$")
     (regex #"/private/var/db/timezone(/|$)")
