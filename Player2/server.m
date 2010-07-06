@@ -54,6 +54,7 @@ static Server *get_server(int rpc_fd) {
 		stream = stream_;
 		rpc_fd = rpc_fd_;
 		request = [[NSMutableURLRequest alloc] initWithURL:url];
+		
 	}
 	return self;
 }
@@ -258,7 +259,12 @@ int new_post_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, 
 int new_get_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len, void **url_abs, size_t *url_abs_len) {
 	Server *self = get_server(rpc_fd);
 	NSString *str = [[[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding] autorelease];
+<<<<<<< HEAD
 	NSURL *nsurl = [NSURL URLWithString:str relativeToURL:[self->delegate baseURL]];
+=======
+	NSURL *nsurl = [NSURL URLWithString:str
+						  relativeToURL:[self->delegate baseURL]];
+>>>>>>> 7933cb7... - Fix a few more sandbox issues
 	if(target_len > 0) {
 		// This is wrong.
 		NSLog(@"new_connection with target %s", target);

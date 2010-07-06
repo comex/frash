@@ -31,6 +31,5 @@
 - (void)displaySyncInRect:(CGRect *)rect;
 - (CGSize)movieSize;
 - (void)diedWithError:(NSString *)error;
-- (UIImage *)scaleImage:(UIImage *) image maxWidth:(float) maxWidth maxHeight:(float) maxHeight;
 
 @end

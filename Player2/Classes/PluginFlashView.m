@@ -88,8 +88,6 @@
 }
 
 - (id)initWithArguments:(NSDictionary *)arguments_ {
-	UIImage *logo;
-
 	if(self = [super init]) {
 		arguments = [arguments_ retain];
 		id attributes = [arguments objectForKey:@"WebPlugInAttributesKey"];
@@ -104,19 +102,17 @@
 				return self;
 			}
 		}
-		logo = [UIImage imageWithContentsOfFile:@"/System/Library/Internet Plug-Ins/Frash.webplugin/logo.jpg"];
 		initialButton = [[UIButton alloc] initWithFrame:self.frame];
-
+		initialButton.backgroundColor = [UIColor colorWithWhite:(0xc3/256.0) alpha:1.0];
+		[initialButton setTitleColor:[UIColor colorWithWhite:(0x3c/256.0) alpha:1.0] forState:UIControlStateNormal];
+		[initialButton setTitleShadowColor:[UIColor colorWithWhite:1.0 alpha:0.53] forState:UIControlStateNormal];
+		initialButton.titleLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+		[initialButton setTitle:@"Flash" forState:UIControlStateNormal];
+		initialButton.reversesTitleShadowWhenHighlighted = YES;
 		initialButton.hidden = NO;
-		initialButton.backgroundColor = [UIColor whiteColor];
-
-		[initialButton setImage: [self scaleImage:logo maxWidth:self.frame.size.width maxHeight:self.frame.size.height] forState:UIControlStateNormal];
-		[initialButton setContentMode:UIViewContentModeCenter];
-
 		[initialButton addTarget:self action:@selector(initialClicked) forControlEvents:UIControlEventTouchUpInside];
 		[initialButton addTarget:self action:@selector(initialDown) forControlEvents:UIControlEventTouchDown];
 		[initialButton addTarget:self action:@selector(initialUp) forControlEvents:UIControlEventTouchUpOutside];
-
 		[self addSubview:initialButton];
 		//self.contentMode = UIViewContentModeRedraw;		
 		//self.backgroundColor = [UIColor grayColor];
@@ -239,7 +235,7 @@
 - (id)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
 		CALayer *lyr = self.layer;
-		lyr.backgroundColor = [[UIColor clearColor] CGColor];
+		lyr.backgroundColor = [[UIColor blackColor] CGColor];
 		self.multipleTouchEnabled = YES;
     }
     return self;
@@ -270,6 +266,7 @@ foo(touchesCancelled, kCancel_ANPTouchAction)
 	[frame loadRequest:[NSURLRequest requestWithURL:URL]];
 }
 
+<<<<<<< HEAD
 - (UIImage *)scaleImage:(UIImage *) image maxWidth:(float) maxWidth maxHeight:(float) maxHeight
 {
 	CGImageRef imgRef = image.CGImage;
@@ -315,5 +312,7 @@ foo(touchesCancelled, kCancel_ANPTouchAction)
 
 }
 
+=======
+>>>>>>> 7933cb7... - Fix a few more sandbox issues
 @synthesize server;
 @end
