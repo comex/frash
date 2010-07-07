@@ -10,6 +10,8 @@ export PATH=/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin:$PATH
 cp -a /System/Library/Frameworks/IOSurface.framework/Versions/A/Headers Player2/IOSurface
 cp -a /System/Library/Frameworks/IOSurface.framework/Versions/A/Headers food/IOSurface
 cp -a /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework/Versions/A/Headers food/CoreText
+cp -a /Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator3.1.3.sdk/System/Library/Frameworks/IOKit.framework/Versions/A/Headers/ food/IOKit
+
 make -C rpc # Yes, I know what MIG is and there is a reason for this.
             # probably a bad reason
 make -C utils
