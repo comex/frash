@@ -2,6 +2,12 @@ ewww, I know.
 
 To actually run it, you'll need libflashplayer.so from Android. (You must get the armeabi variant, not armeabi-v7a)
 
+*** DISCLAIMER ***
+Because of the recent Deb file released, I am placing this disclaimer and a reason why we dont share the libflashplayer.so
+
+It's illegal to distribute adobe code without written permission from the company themself (dont bother trying to ask them they wont). The deb file recently released was not only an Alpha version of frash (completely broken) but also it contained libflashplayer.so, Comex DID NOT release or even authorize this release. I want to make this clear.
+***
+
 Build instructions:
 (do http://networkpx.blogspot.com/2009/09/compiling-iphoneos-31-apps-with-xcode.html but use my version of ldid2)
 (do http://sumgroup.wikispaces.com/iPhone_Dynamic_Library)
