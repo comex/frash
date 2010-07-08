@@ -1,6 +1,6 @@
 ewww, I know.
 
-To actually run it, you'll need libflashplayer.so from Android. (You must get the armeabi variant, not armeabi-v7a)
+To actually run it, you'll need libflashplayer.so from Android.
 
 *** DISCLAIMER ***
 Because of the recent Deb file released, I am placing this disclaimer and a reason why we dont share the libflashplayer.so
