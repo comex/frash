@@ -358,20 +358,27 @@ int connection_response(int rpcfd, NPStream *stream, void *headers, size_t heade
     return 0;
 }
 
+// FIXME: We really need to make all this stuff async
 int connection_got_data(int rpcfd, NPStream *stream, void *data, size_t data_len) {
+    int avail, remain, ret, *p;
+
     notice("connection_got_data [%p]: %d bytes", stream, data_len);
-    int wsize = pluginfuncs.writeready(&nppt, stream);
-    _assert(wsize >= data_len);
-    notice("wsize = %d", wsize);
-    int *offset_p = (int *) &stream->ndata;
-    int ret = pluginfuncs.write(&nppt, stream, *offset_p, data_len, data);
-    *offset_p += data_len;
-    if(ret != data_len) {
-        err("connection_got_data: wanted to write %d bytes but only sent %d (wsize = %d)", data_len, ret, wsize);
-        _abort();
-    }
+
+    avail = pluginfuncs.writeready(&nppt, stream);
+    _assert(avail >= data_len);
+    notice("avail = %d", avail);
+
+    remain = data_len;
+    p = (int *) &stream->ndata;
+    do {
+        ret = pluginfuncs.write(&nppt, stream, *p, data_len, data);
+        *p += ret;
+        remain -= ret;
+    } while (remain > 0);
+
     notice("sent.");
     free(data);
+
     return 0;
 }
 

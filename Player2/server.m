@@ -386,13 +386,6 @@ int invoke_object_property(int rpc_fd, int obj, void *property, size_t property_
 	int *p = args;
 	while(args_len > sizeof(int)) {
 		id obj = [self objectForName:*p++];
-		if(!obj) {
-			NSLog(@"An argument was nil :(");
-			free(args);
-			[str release];
-			return 1000;
-		}
-			
 		
 		[array addObject:obj];
 		args_len -= sizeof(int);

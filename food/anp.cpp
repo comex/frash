@@ -632,7 +632,6 @@ void    window_impl_showKeyboard(NPP instance, bool value) {
  */
 void    window_impl_requestFullScreen(NPP instance) {
     notice("%s", __func__);
-    _abort();
 }
 
 void    window_impl_exitFullScreen(NPP instance) {
