@@ -260,6 +260,10 @@ jobject loadClass(jobject obj, va_list v) {
         dict rcr = named_dict("RawConfigResources");
         s(rcr, "GetAssetFileDescriptor[(Landroid/content/Context;Ljava/lang/String;)Landroid/content/res/AssetFileDescriptor;]", make_a(getAssetFileDescriptor));
         return new_jobject(rcr);
+    } else if(CFEqual(className, CFSTR("com/adobe/flashplayer/FlashPaintSurface"))) {
+        dict fps = (dict) g(classes, "com/adobe/flashplayer/FlashPaintSurface");
+        _assert (fps != NULL);
+        return new_jobject(fps);
     }
     notice("loadClass: unknown class");
     CFShow(className);
