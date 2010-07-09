@@ -247,23 +247,15 @@ jobject new_fps(jclass cls, va_list v) {
 
 //
 
+jclass system_impl_loadJavaClass(NPP instance, const char* className);
+
 jobject loadClass(jobject obj, va_list v) {
     CFStringRef className = g(va_arg(v, jstring), "theString");
-    if(CFEqual(className, CFSTR("com.adobe.flashplayer.SystemCapabilities"))) {
-        dict sc = named_dict("SystemCapabilities");
-        s(sc, "HasTrackBall[(Landroid/content/Context;)Z]", make_a(hasTrackBall));
-        s(sc, "GetScreenHRes[(Landroid/content/Context;)I]", make_a(getScreenHRes));
-        s(sc, "GetScreenVRes[(Landroid/content/Context;)I]", make_a(getScreenVRes));
-        s(sc, "GetBitsPerPixel[(Landroid/content/Context;)I]", make_a(getBitsPerPixel));
-        return new_jobject(sc);
-    } else if(CFEqual(className, CFSTR("com.adobe.flashplayer.RawConfigResources"))) {
-        dict rcr = named_dict("RawConfigResources");
-        s(rcr, "GetAssetFileDescriptor[(Landroid/content/Context;Ljava/lang/String;)Landroid/content/res/AssetFileDescriptor;]", make_a(getAssetFileDescriptor));
-        return new_jobject(rcr);
-    }
-    notice("loadClass: unknown class");
-    CFShow(className);
-    _abort();
+    char *cs = malloc(CFStringGetLength(className)+1);
+    assert(CFStringGetCString(className, cs, CFStringGetLength(className)+1, kCFStringEncodingUTF8));
+    jobject ret = system_impl_loadJavaClass(NULL, cs);
+    free(cs);
+    return ret;
 }
 
 jobject getClassLoader(jobject obj, va_list v) {
@@ -327,6 +319,8 @@ void init_classes() {
     s(context, "getSystemService[(Ljava/lang/String;)Ljava/lang/Object;]", make_a(getSystemService));
     s(context, "createPackageContext[(Ljava/lang/String;I)Landroid/content/Context;]", make_v(createPackageContext));
     s(context, "getClassLoader[()Ljava/lang/ClassLoader;]", make_v(getClassLoader));
+    android_context = new_jobject(context);
+
     dict loader = named_dict("ClassLoader");
     s(classes, "java/lang/ClassLoader", loader);
     dict afd = named_dict("AssetFileDescriptor");
@@ -346,7 +340,17 @@ void init_classes() {
     s(surface, "<init>[(Landroid/content/Context;III)V]", make_v(new_fps));
     s(classes, "com/adobe/flashplayer/FlashPaintSurface", surface);
 
-    android_context = new_jobject(context);
+    dict sc = named_dict("SystemCapabilities");
+    s(sc, "HasTrackBall[(Landroid/content/Context;)Z]", make_a(hasTrackBall));
+    s(sc, "GetScreenHRes[(Landroid/content/Context;)I]", make_a(getScreenHRes));
+    s(sc, "GetScreenVRes[(Landroid/content/Context;)I]", make_a(getScreenVRes));
+    s(sc, "GetBitsPerPixel[(Landroid/content/Context;)I]", make_a(getBitsPerPixel));
+    s(classes, "com/adobe/flashplayer/SystemCapabilities", sc);
+
+    dict rcr = named_dict("RawConfigResources");
+    s(rcr, "GetAssetFileDescriptor[(Landroid/content/Context;Ljava/lang/String;)Landroid/content/res/AssetFileDescriptor;]", make_a(getAssetFileDescriptor));
+    s(classes, "com/adobe/flashplayer/RawConfigResources", rcr);
+
 }
 
 static IOSurfaceRef make_iosurface() {
@@ -382,6 +386,7 @@ void do_jni_surface_created(NPP npp_, jobject j) {
     log("do_jni_surface_created");
     int npp = typeRefToInt(g(j, "npp"));
     dict cls = (dict) g(classes, "com/adobe/flashplayer/FlashPaintSurface");
+    assert(cls);
     //jboolean (*nioge)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeIsOpenGLEnabled[(I)Z]"));
     //jboolean (*nias)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeIsARGBSurface[(I)Z]"));
     void (*nsc)(JNIEnv *, jobject, jint) = RawPtrGet(g(cls, "nativeSurfaceCreated[(I)V]"));

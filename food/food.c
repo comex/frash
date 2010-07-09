@@ -77,7 +77,7 @@ void *stubify(void *addy, const char *id, bool needs_mprotect) {
         *base++ = 0xe8bdb005;
         *base++ = 0x000083f0;
 
-        *base++ = (uint32_t) abort;
+        *base++ = (uint32_t) printf;
         *base++ = (uint32_t) dstr;
         *base++ = p;
     } else { 

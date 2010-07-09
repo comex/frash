@@ -22,10 +22,12 @@
 #define _B  0x80
 
 int32_t __atomic_inc(volatile int32_t* addr) {
+    if(!addr) return 0;
     return OSAtomicIncrement32Barrier((int32_t*)addr)-1;
 }
 
 int32_t __atomic_dec(volatile int32_t* addr) {
+    if(!addr) return 0;
     return OSAtomicDecrement32Barrier((int32_t*)addr)+1;
 }
 

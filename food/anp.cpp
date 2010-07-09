@@ -1,9 +1,9 @@
 #define ANDROID 1
 #include <stdlib.h>
 #define IOSFC_BUILDING_IOSFC
-#include <IOSurface/IOSurfaceAPI.h>
-#include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <IOSurface/IOSurface.h>
+#include <CoreGraphics/CoreGraphics.h>
 #include <jni.h>
 #include "npapi.h"
 #include "android_npapi.h"
