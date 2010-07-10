@@ -50,7 +50,7 @@
 	if(!on) { started = YES; return; }
 	NSLog(@"webPlugInStart");
 	[self webPlugInStop];	
-	self.server = [[[Server alloc] initWithDelegate:self] autorelease];
+	self.server = [[[FServer alloc] initWithDelegate:self] autorelease];
 	rpcfd = self.server.rpc_fd;	
 	[self setSizeIfNecessary];	
 }
@@ -96,7 +96,7 @@
 		if(w && h) {
 			int w_ = [w intValue];
 			int h_ = [h intValue];
-			self.frame = CGRectMake (self.frame.origin.x, self.frame.origin.y, [w floatValue], [h floatValue]);
+			//self.frame = CGRectMake (self.frame.origin.x, self.frame.origin.y, [w floatValue], [h floatValue]);
 			if(w_ < 30 || h_ < 30) {
 				on = YES;
 				return self;
@@ -114,6 +114,9 @@
 		[initialButton addTarget:self action:@selector(initialDown) forControlEvents:UIControlEventTouchDown];
 		[initialButton addTarget:self action:@selector(initialUp) forControlEvents:UIControlEventTouchUpOutside];
 		[self addSubview:initialButton];
+        self.autoresizesSubviews = YES;
+        initialButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
 		//self.contentMode = UIViewContentModeRedraw;		
 		//self.backgroundColor = [UIColor grayColor];
 	}
@@ -123,12 +126,13 @@
 - (void)setFrame:(CGRect)frame {
 	[super setFrame:frame];
 	// For some reason, the frame is constantly fluctating to +/-1 height.
-	oldFrame = frame;
-	oldFrameValid = YES;	
 	if(oldFrameValid && fabsf(frame.size.height - oldFrame.size.height) < 1.5
 					 && fabsf(frame.size.width - oldFrame.size.width) < 1.5) {
+       // NSLog(@"Ignoring frame changae to %fx%f", frame.size.width, frame.size.height);
 		return;
 	}
+	oldFrame = frame;
+	oldFrameValid = YES;	
 	NSLog(@"Frame changed (now %fx%f)", frame.size.width, frame.size.height);
 	[self setSizeIfNecessary];
 	initialButton.frame = self.bounds;

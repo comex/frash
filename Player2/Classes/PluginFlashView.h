@@ -22,10 +22,10 @@
 	
 	IOSurfaceRef sfc;
 	int rpcfd;
-	Server *server;
+	FServer *server;
 	
 }
-@property (retain) Server *server;
+@property (retain) FServer *server;
 
 - (void)useSurface:(IOSurfaceRef)sfc;
 - (void)displaySyncInRect:(CGRect *)rect;

@@ -1,7 +1,7 @@
 #pragma once
 #import <Foundation/Foundation.h>
 
-@interface Server : NSObject {
+@interface FServer : NSObject {
 	id delegate;
 	CFRunLoopSourceRef serv_source;
 	int serv_fd;

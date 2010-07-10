@@ -1,7 +1,7 @@
 ifeq "$(shell arch)" "arm"
 export IPHONE_GCC = 1
 SDK := /var/sdk
-XSTUFF := --sysroot $(SDK) 
+XSTUFF := --sysroot $(SDK) -F$(SDK)/System/Library/Frameworks -F$(SDK)/System/Library/PrivateFrameworks
 GCC := gcc $(XSTUFF)
 GXX := g++ $(XSTUFF)
 else

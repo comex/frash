@@ -9,16 +9,16 @@
 #import <UIKit/UIKit.h>
 #define IOSFC_BUILDING_IOSFC
 #include "IOSurface.h"
-@class Server;
+@class FServer;
 
 @interface FlashViewController : UIViewController {
 	IOSurfaceRef sfc;
 	CGImageRef oldContents;
 	int rpcfd;
-	Server *server;
+	FServer *server;
 	CGDataProviderRef provider;
 }
-@property (retain) Server *server;
+@property (retain) FServer *server;
 - (void)useSurface:(IOSurfaceRef)sfc;
 - (void)displaySyncInRect:(CGRect *)rect;
 - (CGSize)movieSize;
