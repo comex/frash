@@ -197,10 +197,12 @@ void *JNI_OnLoad_ptr;
 void do_jni_onload() {
     extern void do_jni_onload(void *);
 
-    if (JNI_OnLoad_ptr != NULL) {
-        notice("calling JNI_OnLoad...");
+    notice("calling JNI_OnLoad...");
+    if(JNI_OnLoad_ptr) {
         jint version = ((jint (*)(JavaVM *, void *)) JNI_OnLoad_ptr)(&vm, NULL);
         notice("do_jni_onload: version = %x", (unsigned int) version);
+    } else {
+        notice("do_jni_onload: no JNI_OnLoad ...");
     }
 
 }

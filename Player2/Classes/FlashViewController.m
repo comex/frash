@@ -32,7 +32,7 @@
 
 - (void)clicked:(id)sender {
 	[self.server teardown];
-	self.server = [[[Server alloc] initWithDelegate:self] autorelease];
+	self.server = [[[FServer alloc] initWithDelegate:self] autorelease];
 	rpcfd = ((FlashView *)self.view).rpcfd = self.server.rpc_fd;		
 	CGSize size = [self movieSize];
 	set_movie_size(rpcfd, size.width, size.height);

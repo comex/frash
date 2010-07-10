@@ -281,6 +281,7 @@ private:
 void RefBase::incStrong(const void* id) const
 {
     weakref_impl* const refs = mRefs;
+    if(!id || !refs) return;
     refs->addWeakRef(id);
     refs->incWeak(id);
     
@@ -301,6 +302,7 @@ void RefBase::incStrong(const void* id) const
 void RefBase::decStrong(const void* id) const
 {
     weakref_impl* const refs = mRefs;
+    if(!id || !refs) return;
     refs->removeStrongRef(id);
     const int32_t c = android_atomic_dec(&refs->mStrong);
 #if PRINT_REFS

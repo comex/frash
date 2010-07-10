@@ -34,10 +34,12 @@ void android_atomic_write(int32_t value, volatile int32_t* addr) {
 }
 
 int32_t android_atomic_inc(volatile int32_t* addr) {
+    if(!addr) return 1;
     return OSAtomicIncrement32Barrier((int32_t*)addr)-1;
 }
 
 int32_t android_atomic_dec(volatile int32_t* addr) {
+    if(!addr) return 1;
     return OSAtomicDecrement32Barrier((int32_t*)addr)+1;
 }
 

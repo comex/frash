@@ -29,7 +29,7 @@
 // C and Obj-C threading don't really play very well together.
 
 static NSMutableDictionary *servers;
-static Server *get_server(int rpc_fd) {
+static FServer *get_server(int rpc_fd) {
 	return [servers objectForKey:[NSNumber numberWithInt:rpc_fd]];
 }
 /*@interface WebUndefined
@@ -112,12 +112,12 @@ static Server *get_server(int rpc_fd) {
 }
 @end
 
-@implementation Server
+@implementation FServer
 
 
 
 static void error(int rpc_fd, int err) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	NSString *str;
 	if(err == 0) {
 		str = [NSString stringWithFormat:@"Unexpected error"];
@@ -203,21 +203,21 @@ static void error(int rpc_fd, int err) {
 }
 
 int set_sekrit(int rpc_fd, void *sekrit_, size_t sekrit_len) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	NSLog(@"sekrit: %s", sekrit_);
 	if(!self->sekrit) self->sekrit = sekrit_;
 	return 0;
 }
 
 int abort_msg(int rpc_fd, void *message, size_t message_len) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	NSString *str = [[[NSString alloc] initWithBytes:message length:message_len encoding:NSUTF8StringEncoding] autorelease];
 	[self dieWithError:str];
 	return 0;
 }
 
 int use_surface(int rpc_fd, int surface) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	IOSurfaceRef sfc = IOSurfaceLookup(surface);
 	if(!sfc) return 1;
 	[self->delegate performSelector:@selector(useSurface:) withObject:(id)sfc];
@@ -225,14 +225,14 @@ int use_surface(int rpc_fd, int surface) {
 }
 
 int display_sync(int rpc_fd, int l, int t, int r, int b) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	CGRect rect = CGRectMake(l, t, r-l, b-t);
 	[self->delegate performSelector:@selector(displaySyncInRect:) withObject:(id)&rect];
 	return 0;
 }
 
 int new_post_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len, bool isfile, void *buf, size_t buf_len, void **url_abs, size_t *url_abs_len) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	NSString *str = [[[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding] autorelease];
 	NSURL *nsurl = [NSURL URLWithString:str relativeToURL:[self->delegate baseURL]];
 
@@ -257,7 +257,7 @@ int new_post_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, 
 }
 
 int new_get_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, void *target, size_t target_len, void **url_abs, size_t *url_abs_len) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	NSString *str = [[[NSString alloc] initWithBytes:url length:url_len encoding:NSUTF8StringEncoding] autorelease];
 	NSURL *nsurl = [NSURL URLWithString:str relativeToURL:[self->delegate baseURL]];
 	if(target_len > 0) {
@@ -297,7 +297,7 @@ int new_get_connection(int rpc_fd, stream_t stream, void *url, size_t url_len, v
 	 
 int get_parameters(int rpc_fd, void **params, size_t *params_len, int *params_count) {
 	NSLog(@"GET_PARAMETERS");
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	NSDictionary *dict = [self->delegate performSelector:@selector(paramsDict)];
 	
 	*params_count = [dict count];
@@ -335,7 +335,7 @@ int get_parameters(int rpc_fd, void **params, size_t *params_len, int *params_co
 }
 
 int get_string_value(int rpc_fd, int obj, bool *valid, void **value, size_t *value_len) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	NSString *str = [self objectForName:obj];
 	NSLog(@"get_string_value %@", str);
 	if([str isKindOfClass:[NSString class]]) {
@@ -351,7 +351,7 @@ int get_string_value(int rpc_fd, int obj, bool *valid, void **value, size_t *val
 }
 
 int get_object_property(int rpc_fd, int obj, void *property, size_t property_len, int *obj2) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	if(![self->delegate performSelector:@selector(isOn)]) return 1;
 	NSString *str = [[NSString alloc] initWithBytes:property length:property_len encoding:NSUTF8StringEncoding];
 	id base = [self objectForName:obj];
@@ -364,20 +364,20 @@ int get_object_property(int rpc_fd, int obj, void *property, size_t property_len
 }
 
 int get_string_object(int rpc_fd, void *string, size_t string_len, int *obj2) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	*obj2 = [self nameForObject:[[[NSString alloc] initWithBytes:string length:string_len encoding:NSUTF8StringEncoding] autorelease]];
 	return 0;
 }
 
 int get_int_object(int rpc_fd, int theint, int *obj2) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	*obj2 = [self nameForObject:[NSNumber numberWithInt:theint]];
 	return 0;
 }
 
 
 int invoke_object_property(int rpc_fd, int obj, void *property, size_t property_len, void *args, size_t args_len, int *obj2) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	if(![self->delegate performSelector:@selector(isOn)]) return 1;
 	NSString *str = [[NSString alloc] initWithBytes:property length:property_len encoding:NSUTF8StringEncoding];
 	free(property);
@@ -405,7 +405,7 @@ int invoke_object_property(int rpc_fd, int obj, void *property, size_t property_
 
 int get_window_object(int rpc_fd, int *obj) {
 	NSLog(@"Getting window object");
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	if(![self->delegate performSelector:@selector(isOn)]) return 1;
 	id windowObject = [self->delegate performSelector:@selector(getWindowObject)]; // windowScriptObject
 	*obj = [self nameForObject:windowObject];
@@ -414,7 +414,7 @@ int get_window_object(int rpc_fd, int *obj) {
 }
 
 int evaluate_web_script(int rpc_fd, void *script, size_t script_len, int *obj) {
-	Server *self = get_server(rpc_fd);
+	FServer *self = get_server(rpc_fd);
 	NSString *str = [[NSString alloc] initWithBytes:script length:script_len encoding:NSUTF8StringEncoding];
 	id resultObject = [self->delegate performSelector:@selector(evaluateWebScript:) withObject:str];
 	*obj = [self nameForObject:resultObject];
