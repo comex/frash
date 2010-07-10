@@ -1,6 +1,6 @@
-- pld
 - keyboard!
 - invocation arguments
 - make it think it's fullscreen or otherwise fix mouse
 - overzoom
 - Figure out bad canvas_impl (CRAP error)
+- video (yeah, really)
