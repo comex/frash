@@ -19,6 +19,15 @@ multistuff.settings.h: multistuff.py
 myjni.o: myjni.c multistuff.settings.h
 	$(GCC) $(STUFF) -c -o $@ $<
 
+ifdef IPHONE_GCC
+# current iphone-gcc doesn't support NEON stuff. :(
+neon.o: neon.S
+	cp prebuilt-for-iphone-gcc/neon.o neon.o
+else
+neon.o: neon.S
+	$(GCC) $(STUFF) -c -o $@ $<
+endif
+
 %.o: %.S
 	$(GCC) $(STUFF) -c -o $@ $<
 
