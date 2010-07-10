@@ -5,7 +5,7 @@ XSTUFF := --sysroot $(SDK) -F$(SDK)/System/Library/Frameworks -F$(SDK)/System/Li
 GCC := gcc $(XSTUFF)
 GXX := g++ $(XSTUFF)
 else
-SDK := /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhone3.2.sdk/
+SDK := /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS3.2.sdk/
 GCC := /Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/gcc-4.2 --sysroot $(SDK) -arch armv7 
 GXX := /Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/g++-4.2 --sysroot $(SDK) -arch armv7 
 endif
