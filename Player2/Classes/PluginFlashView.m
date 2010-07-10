@@ -15,6 +15,7 @@
 - (id)webFrame;
 - (id)windowObject;
 - (WebFrame *)findFrameNamed:(NSString *)name;
+- (void)webPlugInContainerLoadRequest:(NSURLRequest *)request inFrame:(NSString *)target;
 
 @end
 
@@ -261,13 +262,7 @@ foo(touchesEnded, kUp_ANPTouchAction)
 foo(touchesCancelled, kCancel_ANPTouchAction)
 
 - (void)goToURL:(NSURL *)URL inFrame:(NSString *)frameName {
-	WebFrame *myframe = [[arguments objectForKey:@"WebPlugInContainerKey"] webFrame];
-	WebFrame *frame = [myframe findFrameNamed:frameName];
-	if(!frame) {
-		// It really should open a new window
-		frame = myframe;
-	}
-	[frame loadRequest:[NSURLRequest requestWithURL:URL]];
+	[[arguments objectForKey:@"WebPlugInContainerKey"] webPlugInContainerLoadRequest: [NSURLRequest requestWithURL:URL] inFrame: frameName];
 }
 
 - (UIImage *)scaleImage:(UIImage *) image maxWidth:(float) maxWidth maxHeight:(float) maxHeight

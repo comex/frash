@@ -624,7 +624,6 @@ void    window_impl_clearVisibleRects(NPP instance) {
  */
 void    window_impl_showKeyboard(NPP instance, bool value) {
     notice("%s", __func__);
-    _abort();
 }
 /** Called when a plugin wishes to enter into full screen mode. The plugin's
     Java class (set using kSetPluginStubJavaClassName_ANPSetValue) will be
