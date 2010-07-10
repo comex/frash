@@ -39,6 +39,7 @@ food: ../rpc/food_rpc1.h $(OBJS)
 
 food_wrapper: food_wrapper.c
 	$(GCC) $(STUFF) -o food_wrapper food_wrapper.c
+	ldid -S food_wrapper
 
 clean:
 	rm -f *.o fixups/*.o food
