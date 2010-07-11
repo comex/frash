@@ -97,12 +97,13 @@ void _assertZero_(int test, const char *label, const char *file, int line, const
 }
 #endif
 
+extern bool locked;
 extern IOSurfaceRef sfc;
+extern bool sfc_dirty;
 extern int food;
 extern int movie_w, movie_h, pending_movie_w, pending_movie_h;
 
-
-#define logreal(fmt, args...)  logreal_(CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR(fmt), ##args)) 
+#define logreal(fmt, args...)  logreal_(CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR(fmt), ##args))
 
 #define logx(level, args...) (LOG_LEVEL >= (level) ? (logreal(args)) : (void)0)
 #define LOG_LEVEL 0

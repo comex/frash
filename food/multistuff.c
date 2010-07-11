@@ -379,16 +379,16 @@ jshort impl_GetShortField(JNIEnv *env, jobject obj, jfieldID fieldID) {
 
 struct method_void { void (*v)(jobject, va_list); void (*a)(jobject, const     jvalue *); };
 void impl_CallVoidMethodA(JNIEnv *env, jobject obj, jmethodID methodID, const    jvalue *args) {
-    const void *meth = CFDictionaryGetValue(obj, (CFStringRef)          
+    const void *meth = CFDictionaryGetValue(obj, (CFStringRef)
 methodID);
     if(!meth) { log("Unknown method (A): %@", methodID); _abort(); }
-    struct method_void *st; 
+    struct method_void *st;
     _assert(st = RawDataGetPtr(meth));
     if(!st->a) { log("No A impl: %@", methodID); _abort(); }
     st->a(obj, args);
 }
 void impl_CallVoidMethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list  args) {
-    const void *meth = CFDictionaryGetValue(obj, (CFStringRef)          
+    const void *meth = CFDictionaryGetValue(obj, (CFStringRef)
 methodID);
     if(!meth) { log("Unknown method (V): %@", methodID); _abort(); }
     struct method_void *st;

@@ -158,7 +158,7 @@ void init_jni() {
     env_functions.GetJavaVM = stub(impl_GetJavaVM);
     env_functions.NewGlobalRef = stub(impl_NewGlobalRef);
     env_functions.DeleteGlobalRef = stub(impl_DeleteGlobalRef);
-    
+
     {
         void *x = stub(impl_GetXID);
         env_functions.GetMethodID = x;
@@ -170,7 +170,7 @@ void init_jni() {
     env_functions.NewStringUTF = stub(impl_NewStringUTF);
     env_functions.GetStringUTFChars = stub(impl_GetStringUTFChars);
     env_functions.ReleaseStringUTFChars = stub(impl_ReleaseStringUTFChars);
-    
+
 #include "multistuff.settings.h"
 
     env_functions.PushLocalFrame = stub(impl_PushLocalFrame);

@@ -61,7 +61,7 @@ void *stubify(void *addy, const char *id, bool needs_mprotect) {
         base = stubs;
     }
     void *ret = base;
-        
+
     if(id && STUB_DEBUG) {
         // Debug fun!
         char *dstr; asprintf(&dstr, "%s called from %%p\n", id);
@@ -80,7 +80,7 @@ void *stubify(void *addy, const char *id, bool needs_mprotect) {
         *base++ = (uint32_t) printf;
         *base++ = (uint32_t) dstr;
         *base++ = p;
-    } else { 
+    } else {
         *base++ = 0x43f0e92d;
         *base++ = 0xe89db007;
         *base++ = 0xb08c01f0;
@@ -91,13 +91,13 @@ void *stubify(void *addy, const char *id, bool needs_mprotect) {
 
         *base++ = p;
     }
-    
+
     if(needs_mprotect) {
         _assertZero(mprotect(ret, getpagesize(), PROT_READ | PROT_EXEC));
     } else {
         stubs = base;
     }
-        
+
     ret = (char *)ret + 1;
     CFDictionarySetValue(existing_stubs, addy, ret);
     return ret;
@@ -122,8 +122,8 @@ int hook_fprintf(FILE *stream, const char *format, ...) {
 static void *getsym(char *id) {
     if(!strcmp(id, "fprintf")) id = "hook_fprintf";
     if(!strcmp(id, "__errno")) id = "__error";
-    if(!strcmp(id, "mmap")) id = "rmmap"; 
-    if(!strcmp(id, "mprotect")) id = "rmprotect"; 
+    if(!strcmp(id, "mmap")) id = "rmmap";
+    if(!strcmp(id, "mprotect")) id = "rmprotect";
     if(!strcmp(id, "sysconf")) id = "rsysconf";
     if(!strcmp(id, "uname")) id = "runame";
     if(!strcmp(id, "__dso_handle")) return &zero;
@@ -177,7 +177,7 @@ static void base_load_elf(int fd, Elf32_Sym **symtab, int *symtab_size, void ***
         if(sz_ > sz) sz = sz_;
         free(ph);
     }
- 
+
     sz = (sz + 0xfff) & ~0xfff;
 
     reloc_base = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
@@ -262,7 +262,7 @@ static void base_load_elf(int fd, Elf32_Sym **symtab, int *symtab_size, void ***
                 Elf32_Word *offset = v2v(rel->r_offset);
                 Elf32_Word sym = ELF32_R_SYM(rel->r_info);
                 Elf32_Word type = ELF32_R_TYPE(rel->r_info);
-                
+
                 if(type == R_ARM_RELATIVE) {
                     // notice("Increasing %x which was %x -> %x", offset, *offset, (*offset + (Elf32_Word) reloc_base));
                     *offset += (Elf32_Word) reloc_base;
@@ -282,7 +282,7 @@ static void base_load_elf(int fd, Elf32_Sym **symtab, int *symtab_size, void ***
     }
 
     do_patches();
-   
+
     lseek(fd, ehdr.e_phoff, SEEK_SET);
     phnum = ehdr.e_phnum;
     while(phnum--) {
@@ -307,7 +307,7 @@ static void base_load_elf(int fd, Elf32_Sym **symtab, int *symtab_size, void ***
 
 extern void fds_init();
 extern void go(void *NP_Initialize_ptr, void *JNI_OnLoad_ptr);
-    
+
 extern void GSFontInitialize();
 
 int main(int argc, char **argv) {
@@ -315,7 +315,7 @@ int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IONBF, 0);
 
     char *rpcname = NULL;
-   
+
     argc--; argv++;
     while(argc--) {
         char *p = *argv++;
@@ -338,7 +338,7 @@ int main(int argc, char **argv) {
     stubs = stubs_base;
 
     existing_stubs = CFDictionaryCreateMutable(NULL, 0, NULL, NULL);
-    
+
     add("/usr/lib/libcrypto.dylib");
     add("/usr/lib/libssl.dylib");
     add("/usr/lib/libm.dylib");
@@ -346,7 +346,7 @@ int main(int argc, char **argv) {
     add("./libcutils.dylib");
     add("./libutils.dylib");
     add("./libgccstuff.dylib");
-   
+
     add("./libicudata.42.1.dylib");
     add("./libicui18n.42.1.dylib");
     add("./libicuio.42.1.dylib");

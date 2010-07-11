@@ -29,7 +29,7 @@ void *make_av(void *a, void *v) {
     struct method_generic *entry = RawDataGetPtr(ret);
     entry->a = a ? stub(a) : NULL;
     entry->v = v ? stub(v) : NULL;
-    return ret; 
+    return ret;
 }
 
 void *make_a(void *func) {
@@ -168,7 +168,7 @@ void afdClose(jobject obj, jvalue *a) {
 
 jobject afdGetFD(jobject obj, jvalue *a) {
     dict descriptor = named_dict("aFileDescriptor");
-    //s(descriptor, 
+    //s(descriptor,
     s(descriptor, "descriptor[I]", CFRetain(g(obj, "fd")));
     return new_jobject(descriptor);
 }
@@ -200,7 +200,7 @@ jobject getAssetFileDescriptor(jclass cls, jvalue *a) {
 
     _assert(fd > 0);
     s(descriptor, "fd", intToTypeRef(fd));
-    
+
     return new_jobject(descriptor);
 }
 
@@ -237,11 +237,11 @@ jobject new_fps(jclass cls, va_list v) {
     s(fps, "toggleFullScreen[(Z)V]", make_a(toggleFullScreen));
     notice("new_fps cls=%p ctx=%p %lx %ld %ld", cls, ctx, one, two, three);
     do_jni_onload();
-    
+
     fps_obj = new_jobject(fps);
     fps_npp = (void *) one;
     refresh_size();
-    
+
     return fps_obj;
 }
 
@@ -265,7 +265,7 @@ jobject getClassLoader(jobject obj, va_list v) {
 }
 
 jobject localeToString(jobject obj, jvalue *a) {
-    return new_jobject(new_stringobject("en-US"));  
+    return new_jobject(new_stringobject("en-US"));
 }
 
 jobject localeGetDefault(jclass cls, jvalue *a) {
@@ -382,6 +382,7 @@ static IOSurfaceRef make_iosurface() {
     return ret;
 }
 
+
 void do_jni_surface_created(NPP npp_, jobject j) {
     log("do_jni_surface_created");
     int npp = typeRefToInt(g(j, "npp"));
@@ -410,20 +411,15 @@ void do_jni_surface_changed(NPP npp, jobject j) {
     void (*nsch)(JNIEnv *, jobject, jint, jint, jint, jint) = RawPtrGet(g(cls, "nativeSurfaceChanged[(IIII)V]"));
     nsch(&env, j, (int) npp, 1 /* rgba 888; 565 => 2; see FPS$2.ddx */, movie_w, movie_h);
     notice("ok I called nsch %p", nsch);
-   
-    if(sfc) {
-        IOSurfaceRef sfc_ = sfc;
-        sfc = NULL;
-        CFRelease(sfc_);
-    }
-    sfc = make_iosurface();     
 
-    _assertZero(use_surface(food, (int) IOSurfaceGetID(sfc)));
+    sfc_dirty = true;
+    if(sfc) CFRelease(sfc);
+    sfc = make_iosurface();
 }
 
 jclass system_impl_loadJavaClass(NPP instance, const char* className) {
     notice("loadJavaClass: %s", className);
-    
+
     char *cn = strdup(className), *p = cn;
     while(1) {
         if(!*p) break;
@@ -450,6 +446,6 @@ int set_movie_size(int rpcfd, int w, int h) {
     log("set_movie_size: %dx%d", w, h);
     pending_movie_w = w;
     pending_movie_h = h;
-    if(fps_npp && !already_created_surface) refresh_size();
+    if((fps_npp && !already_created_surface) || !locked) refresh_size();
     return 0;
 }

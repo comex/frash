@@ -78,7 +78,7 @@ void *RawPtrGet(const void *value) {
 static const void *myRetain(CFAllocatorRef allocator, const void *value) {
     struct raw_data *raw = (void *) value;
     if(raw->isa == raw_data_isa || raw->isa == raw_ptr_isa) {
-       raw->retaincount++; 
+       raw->retaincount++;
     } else {
         CFRetain(value);
     }
@@ -166,7 +166,7 @@ void rpc_init(const char *rpcname) {
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = htonl(0x7f000001);
         addr.sin_port = htons(atoi(rpcname));
-       
+
         int tru = 1;
         setsockopt(serv, SOL_SOCKET, SO_REUSEADDR, &tru, sizeof(tru));
         setsockopt(serv, SOL_SOCKET, SO_REUSEPORT, &tru, sizeof(tru));
@@ -243,3 +243,5 @@ uint64_t getus() {
     return ((uint64_t) tp.tv_sec) * 1000000 + (uint64_t) tp.tv_usec;
 }
 #endif
+
+bool locked, sfc_dirty;

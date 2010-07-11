@@ -26,6 +26,7 @@ void init_randomctx() {
     _assert(randomctx);
 }
 
+
 CGRect rectFromRectF(const ANPRectF rectf) {
     return CGRectMake(rectf.left, movie_h - rectf.bottom, rectf.right - rectf.left, rectf.bottom - rectf.top);
 }
@@ -1132,9 +1133,6 @@ static bool cur_dirty_valid;
 extern "C" void refresh_size();
 bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI* dirtyRect) {
     notice("%s surface=%p", __func__, surface);
-    if(pending_movie_w != movie_w || pending_movie_h != movie_h) {
-        refresh_size();
-    }
     if(temp_sz != IOSurfaceGetAllocSize(sfc)) {
         log("alloc %d", temp_sz);
         if(temp) free(temp);
@@ -1144,12 +1142,7 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
     }
     //log("dirtyRect=%p", dirtyRect);
     // sanity, not security check, fwiw
-    if(dirtyRect && (dirtyRect->left >= (int)IOSurfaceGetWidth(sfc) || dirtyRect->top >= (int)IOSurfaceGetHeight(sfc) || dirtyRect->right >= (int)IOSurfaceGetWidth(sfc) || dirtyRect->bottom >= (int)IOSurfaceGetHeight(sfc))) {
-        dirtyRect = false;
-    }
-
-    if(dirtyRect) {
-        //log("%d,%d,%d,%d", dirtyRect->left, dirtyRect->top, dirtyRect->right, dirtyRect->bottom);
+    if(dirtyRect && !(dirtyRect->left >= (int)IOSurfaceGetWidth(sfc) || dirtyRect->top >= (int)IOSurfaceGetHeight(sfc) || dirtyRect->right >= (int)IOSurfaceGetWidth(sfc) || dirtyRect->bottom >= (int)IOSurfaceGetHeight(sfc))) {
         cur_dirty_valid = true;
         cur_dirty = *dirtyRect;
     } else {
@@ -1160,11 +1153,13 @@ bool surface_impl_lock(JNIEnv* env, jobject surface, ANPBitmap* bitmap, ANPRectI
     bitmap->width = sfc ? IOSurfaceGetWidth(sfc) : 0;
     bitmap->height = sfc ? IOSurfaceGetHeight(sfc) : 0;
     bitmap->rowBytes = bitmap->width * 4;
+    locked = true;
     return true;
 }
 
 //#include <fcntl.h>
 extern "C" void rgba_bgra_copy(void *dest, void *src, void *end);
+
 
 void surface_impl_unlock(JNIEnv* env, jobject surface) {
     notice("%s surface=%p", __func__, surface);
@@ -1182,18 +1177,30 @@ void surface_impl_unlock(JNIEnv* env, jobject surface) {
             tempstart += fullrowsize;
             end += fullrowsize;
         }
-        _assertZero(display_sync(food, cur_dirty.left, cur_dirty.top, cur_dirty.right, cur_dirty.bottom));
     } else {
         void *end = (void *) ((char *)temp + IOSurfaceGetAllocSize(sfc));
         rgba_bgra_copy(IOSurfaceGetBaseAddress(sfc), temp, end);
-        _assertZero(display_sync(food, 0, 0, 0, 0));
+    }
+    
+    if(sfc_dirty) {
+        sfc_dirty = false;
+        _assertZero(use_surface(food, (int) IOSurfaceGetID(sfc)));
+    }
+
+    if(cur_dirty_valid) {
+        _assertZero(display_sync(food, cur_dirty.left, cur_dirty.top, cur_dirty.right, cur_dirty.bottom));
+    } else {
+        _assertZero(display_sync(food, 0, 0, IOSurfaceGetWidth(sfc), IOSurfaceGetHeight(sfc)));
     }
     //memcpy(IOSurfaceGetBaseAddress(sfc), temp, IOSurfaceGetAllocSize(sfc));
     /*int fd = open("foo.txt", O_WRONLY | O_CREAT, 0755);
     write(fd, IOSurfaceGetBaseAddress(sfc), IOSurfaceGetAllocSize(sfc));
     close(fd);*/
+    if(pending_movie_w != movie_w || pending_movie_h != movie_h) {
+        refresh_size();
+    }
+    locked = false;
 }
-// 
 
 extern "C"
 void iface_getvalue(NPNVariable typ, ANPInterface *ptr) {

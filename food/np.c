@@ -59,14 +59,14 @@ struct NPFuckedUpVariant {
 
 struct IDProxyObject {
     NPObject obj;
-    int id;    
+    int id;
 };
 
 
 static NPClass idproxy_class;
 
 NPObject *new_idproxy_object(int id) {
-    struct IDProxyObject *ret = malloc(sizeof(struct IDProxyObject)); 
+    struct IDProxyObject *ret = malloc(sizeof(struct IDProxyObject));
     ret->obj._class = &idproxy_class;
     ret->obj.referenceCount = 1;
     ret->id = id;
@@ -247,7 +247,7 @@ static NPClass idproxy_class = {
 extern void iface_getvalue(NPNVariable variable, void *ret_value);
 
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *ret_value) {
-    notice("...getValue: %d", (int) variable);  
+    notice("...getValue: %d", (int) variable);
     {
         uint32_t *p = ret_value;
         notice("   %x %x %x %x", p[0], p[1], p[2], p[3]);
@@ -282,7 +282,7 @@ NPError NPN_GetValue(NPP instance, NPNVariable variable, void *ret_value) {
     return 0;
 }
 NPError NPN_SetValue(NPP instance, NPPVariable variable, void *value) {
-    notice("...setValue: %d => %p", (int) variable, value); 
+    notice("...setValue: %d => %p", (int) variable, value);
     switch(variable) {
     case kRequestDrawingModel_ANPSetValue:
         _assert(value == (void *) kSurface_ANPDrawingModel);
@@ -423,7 +423,7 @@ NPError NPN_PostURLNotify(NPP    instance,
 }
 
 NPError NPN_GetURLNotify(NPP    instance,
-                         const  char* url, 
+                         const  char* url,
                          const  char* target,
                          void*   notifyData) {
     NPStream *stream = malloc(sizeof(NPStream));
@@ -534,7 +534,7 @@ static void init_funcs() {
     pluginfuncs.size = sizeof(pluginfuncs);
 }
 
-static char *src; 
+static char *src;
 
 void go(NP_InitializeFuncPtr NP_Initialize_ptr, void *JNI_OnLoad_ptr_) {
     init_idproxy_class();
@@ -557,7 +557,7 @@ void go(NP_InitializeFuncPtr NP_Initialize_ptr, void *JNI_OnLoad_ptr_) {
     _assertZero(get_parameters(food, (void **) &parameters, &parameters_len, &parameters_count));
 
     int real_count = 0;
-    
+
     char **argn = malloc((parameters_count + 3) * sizeof(char *));
     char **argv = malloc((parameters_count + 3) * sizeof(char *));
 
@@ -592,20 +592,20 @@ void go(NP_InitializeFuncPtr NP_Initialize_ptr, void *JNI_OnLoad_ptr_) {
     window.clipRect = (NPRect) {0, 0, window.width, window.height};
     window.type = NPWindowTypeDrawable;
     _assertZero(pluginfuncs.setwindow(&nppt, &window));
-    
+
     _assertZero(pluginfuncs.getvalue(&nppt, NPPVpluginScriptableNPObject, &scriptable));
 
     jobject js;
     ret = pluginfuncs.getvalue(&nppt, kJavaSurface_ANPGetValue, &js);
     _assertZero(ret);
-    
+
     //post_lifecycle_event(kResume_ANPLifecycleAction);
     //post_lifecycle_event(kEnterFullScreen_ANPLifecycleAction);
     //post_lifecycle_event(kOffScreen_ANPLifecycleAction);
     //post_lifecycle_event(kOnScreen_ANPLifecycleAction);
     do_later(later, NULL);
     CFRunLoopRun();
-} 
+}
 
 static void even_later(CFRunLoopTimerRef a, void *b) {
     log("---- EVEN LATER ----");

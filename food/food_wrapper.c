@@ -3,19 +3,19 @@
  * Copyright (c) 2005 Apple Computer, Inc. All rights reserved.
  *
  * @APPLE_APACHE_LICENSE_HEADER_START@
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * @APPLE_APACHE_LICENSE_HEADER_END@
  */
 #include <sys/types.h>
@@ -138,7 +138,7 @@ int main(int argc __attribute__((unused)), char *argv[])
 
         if(kev.udata != NULL) {
             syslog(LOG_WARNING, "got a kev with udata %d", (int) kev.udata);
-            close((int)kev.ident); 
+            close((int)kev.ident);
             kill((pid_t)kev.udata, SIGKILL);
             continue;
         }
@@ -207,7 +207,7 @@ int main(int argc __attribute__((unused)), char *argv[])
             send(r, req, msgsize, 0);
             free(req);
             free(sekrit);
-    
+
             pid_t pid = fork();
 			switch (pid) {
 			case -1:
@@ -230,7 +230,7 @@ int main(int argc __attribute__((unused)), char *argv[])
 				continue;
                 }
 			}
-            
+
 
 			setpgid(0, 0);
 
