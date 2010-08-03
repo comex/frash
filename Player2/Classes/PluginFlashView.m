@@ -11,14 +11,13 @@
 #include "food_rpc2.h"
 
 @interface NSObject (FakeMethodsToMakeGCCShutUp)
-
 - (id)webFrame;
 - (id)windowObject;
 - (WebFrame *)findFrameNamed:(NSString *)name;
 - (void)webPlugInContainerLoadRequest:(NSURLRequest *)request inFrame:(NSString *)target;
+- (CGFloat)scale;
 
 @end
-
 
 @implementation PluginFlashView
 
@@ -208,7 +207,6 @@
 
 - (CGSize)movieSize {
 	CGSize origSize = self.frame.size;
-	CGFloat scale = [[UIScreen mainScreen] scale];
 	return CGSizeMake(origSize.width * scale, origSize.height * scale);
 }
 
@@ -244,6 +242,13 @@
 		CALayer *lyr = self.layer;
 		lyr.backgroundColor = [[UIColor blackColor] CGColor];
 		self.multipleTouchEnabled = YES;
+
+        UIScreen *screen = [UIScreen mainScreen];
+        if(![screen respondsToSelector:@selector(scale)]) {
+            scale = 1.0;
+        } else {
+            scale = [screen scale];
+        }
     }
     return self;
 }
@@ -253,7 +258,7 @@
 	if(rpcfd) {\
 		for(UITouch *t in touches) {\
 			CGPoint location = [t locationInView:self]; \
-			touch(rpcfd, num, location.x, location.y); \
+			touch(rpcfd, num, location.x * scale, location.y * scale); \
 		} \
 	}\
 } 

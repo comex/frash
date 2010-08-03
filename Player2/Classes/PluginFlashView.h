@@ -23,7 +23,8 @@
 	IOSurfaceRef sfc;
 	int rpcfd;
 	FServer *server;
-	
+
+    CGFloat scale;
 }
 @property (retain) FServer *server;
 

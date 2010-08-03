@@ -1,9 +1,9 @@
 #!/bin/sh
-set -e
 pushd icu
 for i in libicudata.42.1.dylib libicuio.42.1.dylib; do install_name_tool -change ../lib/libicudata.42.1.dylib libicudata.42.1.dylib $i; done
 popd
 rsync -avz food/food{,.sb,.plist,_wrapper} utils/lib{c,}utils.dylib icu/*.dylib  libflashplayer.so libgcc/libgccstuff.dylib oem.cfg mobile@ipad:frash/
 rsync -avz Frash.webplugin/ root@ipad:'/System/Library/Internet\ Plug-Ins/Frash.webplugin' 
 rsync -avz Player2/build/Release-iphoneos/Plugin.dylib root@ipad:'/System/Library/Internet\ Plug-Ins/Frash.webplugin/'
+rsync -vz food/food.plist root@ipad:'/System/Library/LaunchDaemons/'
 
