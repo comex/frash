@@ -1,7 +1,7 @@
 Package: frash
 Architecture: iphoneos-arm 
 Name: frash
-Version: 0.00
+Version: 0.02
 Priority: optional
 Depends: gsc.armv7
 Description: All your base are belong to us?
