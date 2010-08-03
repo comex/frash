@@ -207,7 +207,9 @@
 }
 
 - (CGSize)movieSize {
-	return self.frame.size;
+	CGSize origSize = self.frame.size;
+	CGFloat scale = [[UIScreen mainScreen] scale];
+	return CGSizeMake(origSize.width * scale, origSize.height * scale);
 }
 
 - (void)diedWithError:(NSString *)error {
